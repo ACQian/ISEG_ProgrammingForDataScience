@@ -1,0 +1,42 @@
+\chapter{Class and Methods}
+
+Defining a function within a class is called a method.
+We can also create an object and call a method.
+\begin{lstlisting}[language=Python]
+    class Person:
+        def speak(self):
+            print("Hello!")
+
+    p = Person()
+    p.speak()  # Output: Hello!
+\end{lstlisting}
+
+
+The init method is a special method that is called when an object is instantiated.
+\begin{lstlisting}[language=Python]
+    class Person:
+        def __init__(self, name):
+            self.name = name
+
+        def speak(self):
+            print("Hello, my name is", self.name)
+
+    p = Person("Alice")
+    p.speak()  # Output: Hello, my name is, Alice
+\end{lstlisting}
+
+
+Inheritance allows a class to inherit attributes and methods from another class.
+
+Privacy of the class can be controlled by prefixing an attribute or method name with an underscore (\texttt{\textunderscore}).
+This indicates that the attribute or method is intended for internal use only.
+
+\begin{lstlisting}[language=Python]
+    class Person:
+        def __init__(self, name):
+            self._name = name  # Private attribute 
+        def _speak(self):  # Private method
+            print("Hello, my name is", self._name)
+    p = Person("Alice")
+    p._speak()  # Output: Hello, my name is, Alice
+\end{lstlisting}
