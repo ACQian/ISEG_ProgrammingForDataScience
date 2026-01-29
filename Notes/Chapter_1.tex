@@ -1,42 +1,218 @@
-\chapter{Class and Methods}
+\chapter{Object Oriented Programming}
 
-Defining a function within a class is called a method.
-We can also create an object and call a method.
-\begin{lstlisting}[language=Python]
+\section{Object oriented approach}
+
+\dfn[]{Object Oriented Programming}{
+    Object oriented programming (OOP) is a imperative programming programming paradigm
+    where instructions are grouped together with the part of the state they operate on.
+}
+
+The main \textbf{structural components} of all systems are
+\begin{itemize}
+    \item Objects: Object is something that takes up space in the real or conceptual world with which somebody may do things.
+    An object is an instance of a class.
+    An object has three main characteristics:
+    \begin{itemize}
+        \item Name (or ID): Unique identifier for the object.
+        \item State: Attributes that describe the object.
+        \item Operations (or behavior): Actions that the object can perform.
+    \end{itemize}
+    \item Class objects: Class is the blueprint of an object.
+\end{itemize}
+
+Main \textbf{characteristics} of the approach are
+\begin{itemize}
+    \item Encapsulation: The mechanism of hiding the implementation of the object. Only the necessary details are exposed to the user.
+    \item Abstraction: A principle which consists of ignoring the aspects of a subject that is not relevant for the present purpose.
+    It is the process of simplifying complex systems by modeling classes based on the essential properties and behaviors an object must have.
+    \item Inheritance: Mechanism by which one class can inherit attributes and methods from another class. Making new classes from existing ones.
+    \item Polymorphism: Ability to present the same interface for different data types.
+    Same function name but different signatures being used for different types.
+\end{itemize}
+
+\section{Class}
+
+\dfn[]{Class Diagram}{
+    A class diagram is a type of static structure diagram that describes the structure of a system by showing the system's classes, their attributes, operations (or methods), and the relationships among objects.
+}
+Elements of a \textbf{class}:
+\begin{itemize}
+    \item Class Name (ID Class): The name of the class. Nouns associated with the textual description of a problem. Singular.
+    \item Attributes: The properties or characteristics of the class. Types include Real, Integer, Text, Boolean, Enumerated, etc.
+    \item Operations (Methods): The functions or operations that can be performed on the class. Behaviors of the class.
+\end{itemize}
+\textbf{Relations} between classes:
+\begin{itemize}
+    \item Association: A relationship between two classes that indicates how objects of one class are connected to objects of another class.
+    \item Aggregation: A special type of association that represents a "whole-part" relationship between classes.
+    \item Composition: A stronger form of aggregation that implies ownership and a whole-part relationship where the part cannot exist independently of the whole.
+    \item Generalization: A relationship between a more general class (superclass) and a more specific class (subclass) that indicates inheritance.
+\end{itemize}
+\begin{center}
+    \includegraphics[scale=0.4]{Images/1.png}
+\end{center}
+
+\subsection{Class and Method in Python}
+
+\begin{lstlisting}[
+    caption={Empty class definition in Python}
+]
+    class Person:
+        pass # An empty class definition
+
+    p = Person()
+    print(p)  # Output: <__main__.Person object at 0x...>
+\end{lstlisting}
+
+\begin{lstlisting}[
+    caption={Method}
+]
+    """Define class with method"""
     class Person:
         def speak(self):
             print("Hello!")
 
+    """Create object and call method"""
     p = Person()
     p.speak()  # Output: Hello!
 \end{lstlisting}
 
-
-The init method is a special method that is called when an object is instantiated.
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[caption={Attributes and \_\_init\_\_ method}]
+    """
+    The __init__ method is a special method in Python classes.
+    It is a method that Python calls when you create a new instance of this class.
+    """
     class Person:
         def __init__(self, name):
-            self.name = name
-
+            self.name = name  # Initialize the name attribute
         def speak(self):
-            print("Hello, my name is", self.name)
+            print('Hello, my name is', self.name)
 
-    p = Person("Alice")
-    p.speak()  # Output: Hello, my name is, Alice
+    p = Person('Carlos')
+    p.speak()  # Output: Hello, my name is Carlos
 \end{lstlisting}
 
+\nt{
+    The first argument of every class method, including init, is always a reference to the current instance of the class.
+    By convention, this argument is always named self.
+}
 
-Inheritance allows a class to inherit attributes and methods from another class.
+\begin{lstlisting}[caption={Class Pet with attributes and methods}]
+    class Pet(object):
+        def __init__(self, name, species):
+            self.name = name
+            self.species = species
+        def getName(self):
+            return self.name
+        def getSpecies(self):
+            return self.species
+        def __str__(self):
+            return "%s is a %s" % (self.name, self.species)
+\end{lstlisting}
 
-Privacy of the class can be controlled by prefixing an attribute or method name with an underscore (\texttt{\textunderscore}).
-This indicates that the attribute or method is intended for internal use only.
+\begin{lstlisting}[caption={Inheritance}]
+    class Dog(Pet):
 
-\begin{lstlisting}[language=Python]
+    """Dog inherits from Pet"""
+
+        def __init__(self, name, chases_cats):
+            # Call the parent class (Pet) constructor
+            Pet.__init__(self, name, "Dog")
+            self.chases_cats = chases_cats
+
+        def chasesCats(self):
+            return self.chases_cats
+
+    class Cat(Pet):
+
+    """Cat inherits from Pet"""
+
+        def __init__(self, name, hates_dogs):
+            # Call the parent class (Pet) constructor
+            Pet.__init__(self, name, "Cat")
+            self.hates_dogs = hates_dogs
+
+        def hatesDogs(self):
+            return self.hates_dogs
+\end{lstlisting}
+
+\begin{center}
+    \includegraphics[scale=0.5]{Images/2.png}
+    \includegraphics[scale=0.5]{Images/3.png}
+\end{center}
+
+\ex[]{Inheritance}{
+    myPet = Pet(``Boby'', ``Dog'')\\
+    myDog = Dog(``Rex'', True)
+    \begin{itemize}
+        \item isinstance(myDog, Pet)  \# Returns: True
+        \item isinstance(myDog, Dog)  \# Returns: True
+        \item isinstance(myPet, Pet)  \# Returns: True
+        \item isinstance(myPet, Dog)  \# Returns: False
+    \end{itemize}
+}
+
+\subsection{Access Modifiers}
+There are three types of access modifiers in Python:
+\begin{itemize}
+    \item Public: Members (attributes and methods) declared as public are accessible from anywhere.
+    \item Protected: Members declared as protected are accessible within the class and its subclasses. In Python, this is indicated by a single underscore prefix (e.g., \_attribute).
+    \item Private: Members declared as private are accessible only within the class itself. In Python, this is indicated by a double underscore prefix (e.g., \_\_attribute).
+\end{itemize}
+
+\begin{lstlisting}[caption={Private Attributes}]
     class Person:
-        def __init__(self, name):
-            self._name = name  # Private attribute 
-        def _speak(self):  # Private method
-            print("Hello, my name is", self._name)
-    p = Person("Alice")
-    p._speak()  # Output: Hello, my name is, Alice
+        def __init__(self, name, age):
+            self.__name = name      # Private attribute
+            self.__age = age        # Private attribute
+    
+    p = Person("David", 23)
+    p.__name  # This will raise an AttributeError
 \end{lstlisting}
+
+\begin{lstlisting}[caption={Public Attributes}]
+    class Person:
+        def __init__(self, name, age):
+            self.name = name      # Public attribute
+            self.age = age        # Public attribute
+
+    p = Person("David", 23)
+    p.name  # This will work fine and return "David"
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Protected Attributes}]
+    class Person:
+        def __init__(self, name, age):
+            self._name = name      # Protected attribute
+            self._age = age        # Protected attribute
+
+    p = Person("David", 23)
+    p._name  # This will work, but it's discouraged to access protected members directly
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Example Usage}]
+    class Person:
+        def __init__(self, money=0, energy=100):
+            self.money = money
+            self.energy = energy
+        
+        def work(self, hours):
+            if self.energy >= hours * 10:
+                self.money += hours * 10 # Assume earning $10 per hour of work
+                self.energy -= hours * 10
+                print (f"Worked for {hours} hours. Money increased to ${self.money}, energy decreased to {self.energy}.")
+            else:
+                print("Not enough energy to work.")
+\end{lstlisting}
+
+%\dfn{Definition Topic}{Definition Statement}
+%\thm{Theorem Name}{Theorem Statement}
+%\cor[cori]{Corollary Name}{Corollary Statement}
+%\lem{Lemma Name}{Lemma Statement}
+%\clm{Claim Name}{Claim Statement}
+%\ex{Example Name}{Example explained}
+%\opn{Open Question Name}{Question Statement}
+%\pr{Question Name}{Question Statement}
+%\nt{Special Note}
+%\wc{Wrong Concept topic}{Explanation}
+%\proof{Proof Idea}{}
