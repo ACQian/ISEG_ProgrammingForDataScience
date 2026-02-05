@@ -19,10 +19,10 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sns
+# To handle SSL certificate verification for URL access
 import ssl
 import urllib.request
 import io
-# To handle SSL certificate verification for URL access
 
 
 # =============================================================================
