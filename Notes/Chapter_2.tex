@@ -307,14 +307,375 @@ We can also access an array element and change value to an array.
     X.skew()  # Calculate skewness of each column
 \end{lstlisting}
 
-\section{Regular Expressions}
-
 \section{Statistics}
+
+\subsection{Statistics module}
+
+For averages and measures of central location, we have the following functions in the statistics module:
+\begin{itemize}
+    \item mean(): Calculate the arithmetic mean of a list of numbers.
+    \item harmonic\_mean(): Calculate the harmonic mean of a list of numbers.
+    \item median(): Calculate the median (middle value) of a list of numbers.
+    \item median\_low(): Calculate the low median of a list of numbers.
+    \item median\_high(): Calculate the high median of a list of numbers.
+    \item mode(): Calculate the mode (most common value) of a list of numbers.
+    \item stdev(): Calculate the standard deviation of a list of numbers.
+    \item variance(): Calculate the variance of a list of numbers.
+    \item pstdev(): Calculate the population standard deviation of a list of numbers.
+    \item pvariance(): Calculate the population variance of a list of numbers.
+\end{itemize}
+
+There are also other packages that could be used, such as NumPy,Pandas, and SciPy, which provide more advanced statistical functions and methods for data analysis.
+
+\subsection{Statistical tests}
+
+\begin{lstlisting}[caption={Generating random numbers from a normal distribution}]
+    improt numpy as np
+    import matplotlib.pyplot as plt
+
+    mu, sigma = 0, 0.1  # mean and standard deviation
+    a = np.random.normal(mu, sigma, 1000)  # Generate 1000 random numbers from a normal distribution
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Normality tests}]
+    from scipy import stat
+
+    stat, p = stats.normaltest(a)  # Perform D'Agostino and Pearson's test for normality
+
+    if p < 0.05:
+        print("The data is not normally distributed")
+    else:
+        print("The data is normally distributed")
+    
+    stat, p = stats.shapiro(a)  # Perform Shapiro-Wilk test for normality
+
+    if p < 0.05:
+        print("The data is not normally distributed")
+    else:
+        print("The data is normally distributed")
+\end{lstlisting}
+
+\dfn[]{Student's t-test}{
+    This is a two-sided test for the null hypotehsis that 2 independent samples have identical average (expected) values.
+}
+
+\begin{lstlisting}[caption={Student's t-test}]
+    from scipy import stats
+
+    # Generate two independent samples
+    group1 = np.random.normal(loc=0, scale=1, size=100)  # Sample from group 1
+    group2 = np.random.normal(loc=0.5, scale=1, size=100)  # Sample from group 2
+
+    # Perform the t-test
+    stat, p = stats.ttest_ind(group1, group2, equal_var=False)  # Use Welch's t-test for unequal variances
+
+    if p < 0.05:
+        print("The means of the two groups are significantly different")
+    else:
+        print("The means of the two groups are not significantly different")
+\end{lstlisting}
+
+\dfn[]{Paired student's t-test}{
+    This is a two-sided test for the null hypothesis that 2 related or repeated samples have identical average (expected) values.
+}
+
+\begin{lstlisting}[caption={Paired Student's t-test}]
+    from scipy import stats
+
+    # Generate two related samples
+    before = np.random.normal(loc=0, scale=1, size=100)  # Sample before treatment
+    after = before + np.random.normal(loc=0.5, scale=1, size=100)  # Sample after treatment (related to before)
+
+    # Perform the paired t-test
+    stat, p = stats.ttest_rel(before, after)
+
+    if p < 0.05:
+        print("The means of the two related groups are significantly different")
+    else:
+        print("The means of the two related groups are not significantly different")
+\end{lstlisting}
+
+\dfn[]{Analysis of Variance Test (ANOVA)}{
+    The one-way ANOVA tests the null hypothesis that two or more groups have the same population mean.
+    It is an extension of the t-test for more than two groups, possibly with different sample sizes.
+}
+
+\begin{lstlisting}[caption={ANOVA}]
+    from scipy import stats
+
+    # Generate three independent samples
+    group1 = np.random.normal(loc=0, scale=1, size=100)  # Sample from group 1
+    group2 = np.random.normal(loc=0.5, scale=1, size=100)  # Sample from group 2
+    group3 = np.random.normal(loc=1, scale=1, size=100)  # Sample from group 3
+
+    # Perform the one-way ANOVA test
+    stat, p = stats.f_oneway(group1, group2, group3)
+
+    if p < 0.05:
+        print("At least one group mean is significantly different from the others")
+    else:
+        print("All group means are not significantly different from each other")
+\end{lstlisting}
 
 \section{Time Series}
 
+The purpose of time series analysis is to understand the underlying structure and function that produced the observed data, and to fit a model and make forecasts.
+
+To decompose time series data, we can use the seasonal\_decompose function from the statsmodels library, which decomposes a time series into its trend, seasonal, and residual components.
+
+We can also plot the autocorrelation function (ACF) and partial autocorrelation function (PACF) to identify the presence of autocorrelation in the data, which can help us determine the appropriate order of an ARIMA model for forecasting.
+
+The ARIMA (AutoRegressive Integrated Moving Average) model is a popular method for forecasting time series data, which combines autoregressive (AR) and moving average (MA) components, along with differencing to make the data stationary.
+
+After fitting the model, we can check the residuals to ensure that they are normally distributed and do not exhibit autocorrelation, which would indicate that the model is a good fit for the data.
+
+We can also train and test the data by splitting the time series into a training set and a test set, fitting the model on the training data, and evaluating its performance on the test data using metrics such as mean absolute error (MAE) or root mean squared error (RMSE).
+
+\begin{lstlisting}[caption={Time series analysis and forecasting}]
+    import statsmodels.tsa.api as tsa
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from pandas.plotting import autocorrelation_plot
+    import statsmodels.tsa.api as tsa
+    from math import sqrt
+    from sklearn.metrics import mean_squared_error
+
+    # Load time series data
+    df = pd.read_csv('tourismPortugal.csv', sep=';')
+    df['month'] = pd.to_datetime(df['month'])
+    df = df.set_index(df['month'])
+    df = df.drop(['month'], axis=1)
+
+    # Decompose the time series into trend, seasonal, and residual components
+    result = tsa.seasonal_decompose(df, model='multiplicative', period=12)
+
+    figure = result.plot() # Plot the decomposed components
+
+    # Plot the autocorrelation function (ACF) and partial autocorrelation function (PACF)
+    serie = df[['tourists', 'month']]
+    autocorrelation_plot(serie) # Plot the ACF
+    plt.show()
+
+    # Fit an ARIMA model to the data
+    serie = serie.set_index('month')
+    serie.index = series.index.to_period('M') # Convert index to monthly periods
+
+    p = 4 # Order of the autoregressive part
+    d = 1 # Degree of differencing
+    q = 0 # Order of the moving average part
+
+    model = tsa.arima.ARIMA(serie, order=(p, d, q))
+    results = model.fit()
+    print(results.summary()) # Print the model summary
+
+    # Check the residuals
+    residuals = pd.DataFrame(results.resid)
+    residuals.plot(title="Residuals") # Plot the residuals
+    plt.show()
+
+    residuals.plot(kind='kde', title='Density of Residuals') # Plot the density of residuals
+    plt.show()
+
+    print(residuals.describe()) # Print the summary statistics of residuals
+
+    # Train and test the model
+    X = serie.values
+    size = int(len(X) * 0.70) # Split the data into training and test sets
+    train, test = X[0:size], X[size:len(X)]
+    hisotry = [x for x in train]
+    predictions = list()
+
+    # Walk-forward validation
+    for t in range(len(test)):
+        model = tsa.arima.ARIMA(history, order=(p, d, q))
+        model_fit = model.fit()
+        output = model_fit.forecast()
+        yhat = output[0]
+        predictions.append(yhat)
+        obs = test[t]
+        history.append(obs)
+        print('predicted=%f, expected=%f' % (yhat, obs))
+
+    # Evaluate forecasts
+    rmse = sqrt(mean_squared_error(test, predictions))
+    print("Test RMSE: %.3f", rmse)
+
+    # Plot the actual vs predicted values
+    plt.plot(test)
+    plt.plot(predictions, color='red')
+    plt.show()
+\end{lstlisting}
+
+Other approaches such as LSTM, Prophet, and GARCH models can also be used for time series forecasting, especially when dealing with non-linear patterns or volatility in the data.
+
 \section{Regression}
 
+The main statsmodels API is split into models:
+\begin{itemize}
+    \item statsmodels.api: The main API for statistical models, including linear regression, generalized linear models, and time series analysis. Cross-sectional models and methods.
+    \item statsmodels.formula.api: Provides a formula interface for specifying statistical models using R-style formulas. A convenience interface for specifying models using formula strings and DataFrames.
+    \item statsmodels.tsa.api: Contains tools for time series analysis, including ARIMA models, seasonal decomposition, and forecasting. Time-series models and methods.
+    \item statsmodels.graphics.api: Provides functions for visualizing statistical models and results, such as residual plots and influence plots.
+\end{itemize}
+
+\subsection{Linear regression}
+
+Linear models with independently and identically distributed errors, and for errors with heteroscedasticity or autocorrelation of unknown form.
+
+\begin{itemize}
+    \item OLS (Ordinary Least Squares): A linear regression model that estimates the relationship between a dependent variable and one or more independent variables by minimizing the sum of squared residuals.
+    Assumptions: linearity, independence, homoscedasticity, normality of errors, and no multicollinearity.
+    \item GLM (Generalized Linear Models): A flexible generalization of linear regression that allows for response variables that have error distribution models other than a normal distribution. It includes logistic regression, Poisson regression, and others.
+    Assumptions: the response variable follows an exponential family distribution, the link function is correctly specified, and the observations are independent.
+    \item GEE (Generalized Estimating Equations): A method for estimating the parameters of a generalized linear model with possible correlation between outcomes. It is used for longitudinal data analysis and clustered data.
+    Assumptions: the correlation structure of the data is correctly specified, and the observations are independent across clusters. Instead of assuming independent observations, GEE accounts for within-subject correlation.
+    \item GAM (Generalized Additive Models): A generalization of linear models that allows for non-linear relationships between the dependent and independent variables by using smooth functions. It is used for modeling complex relationships in data.
+    Assumptions: the response variable follows an exponential family distribution, the link function is correctly specified, and the observations are independent. GAMs do not assume a specific functional form for the relationship between the dependent and independent variables, allowing for more flexibility in modeling non-linear relationships.
+    \item Robust linear models: These models are designed to be less sensitive to outliers and violations of assumptions than traditional linear regression models. They include methods such as Huber regression and RANSAC (Random Sample Consensus).
+    Assumptions: Robust linear models do not rely on the same assumptions as traditional linear regression models, such as normality of errors or homoscedasticity. Instead, they are designed to be more flexible and robust to violations of these assumptions, making them suitable for data with outliers or non-normal error distributions.
+    \item LMM (Linear Mixed Models): These models are used for data that have both fixed effects (parameters associated with an entire population) and random effects (parameters associated with individual experimental units). They are commonly used in fields such as psychology, ecology, and medicine for analyzing data with hierarchical or nested structures.
+    Assumptions: linearity, normality of residuals, homoscedasticity, and independence of observations. Additionally, LMMs assume that the random effects are normally distributed and that the fixed effects are correctly specified. LMMs are particularly useful for analyzing data with repeated measures or clustered data, where observations are not independent, as they can account for the correlation between observations within clusters or subjects.
+\end{itemize}
+
+\subsection{OLS assumptions}
+
+OLS assumes a \textbf{linear relationship} between the independent variables and the dependent variable. 
+Verification methods include scatter plots to visualize the relationship between independent variables and the dependent variable.
+Residual plots by plotting the residuals against the fitted values to check for patterns that indicate non-linearity.
+And polynomial features by fitting a polynomial regression to see if higher-order terms improve the model fit.
+
+\begin{lstlisting}[caption={Checking linearity assumption in OLS}]
+    import numpy as np
+    import pandas as pd
+    import statsmodels.api as sm
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    
+    # Example dataset
+    df = pd.DataFrame({
+        'X': np.linspace(1, 100, 100),
+        'Y': np.linspace(1, 100, 100) + np.random.normal(0, 5, 100)
+    })
+    
+    # Fit OLS model
+    X = sm.add_constant(df['X']) # Add intercept
+    model = sm.OLS(df['Y'], X).fit()
+
+    # Scatter plot
+    sns.regplot(x=df['X'], y=df['Y'],
+    scatter_kws={'alpha':0.5},
+    line_kws={"color":"red"})
+    plt.title("Checking Linearity with Scatter Plot")
+    plt.show()
+    
+    # Residual plot
+    plt.scatter(
+        model.fittedvalues, model.resid, alpha=0.5)
+    plt.axhline(y=0, color='red', linestyle='--')
+    plt.xlabel("Fitted Values")
+    plt.ylabel("Residuals")
+    plt.title("Residual Plot for Linearity Check")
+    plt.show()
+\end{lstlisting}
+
+\textbf{Multicollinearity} occurs when two or more independent variables in a regression model are highly correlated, meaning that one can be linearly predicted from the others with a substantial degree of accuracy. This can lead to unstable estimates of regression coefficients and make it difficult to determine the individual effect of each independent variable on the dependent variable.
+Verification methods include correlation matrix by calculating the correlation coefficients between independent variables to identify pairs that are highly correlated.
+Variance Inflation Factor (VIF) by calculating the VIF for each independent variable, where a VIF value greater than 5 or 10 indicates a potential multicollinearity problem.
+
+\begin{lstlisting}[caption={Checking multicollinearity using VIF}]
+    from statsmodels.stats.outliers_influence import variance_inflation_factor
+    
+    # Create feature matrix
+    X = pd.DataFrame({'X1': np.random.rand(100), 'X2': np.random.rand(100) * 2,
+        'X3': np.random.rand(100) * 3})
+    X = sm.add_constant(X)
+
+    # Compute VIF for each variable
+    vif_values = []
+    for i in range(X.shape[1]):
+        vif = variance_inflation_factor(X.values, i)
+        vif_values.append((X.columns[i], vif))
+
+    # Convert to DataFrame
+    vif_data = pd.DataFrame(vif_values, columns=["Variable", "VIF"])
+    # Display the results
+    print(vif_data)
+\end{lstlisting}
+
+Residuals should have constant variance, \textbf{homoscedasticity}, across all levels of the independent variables.
+Verification methods include residual plots by plotting the residuals against the fitted values to check for patterns that indicate heteroscedasticity.
+Breusch-Pagan test by performing the Breusch-Pagan test to statistically assess the presence of heteroscedasticity, where a significant p-value indicates heteroscedasticity.
+
+\begin{lstlisting}[caption={Checking homoscedasticity}]
+    import statsmodels.stats.diagnostic as smd
+
+    # Residual plot
+    plt.scatter(model.fittedvalues, model.resid, alpha=0.5)
+    plt.axhline(y=0, color='red', linestyle='--')
+    plt.xlabel("Fitted Values")
+    plt.ylabel("Residuals")
+    plt.title("Checking Homoscedasticity")
+    plt.show()
+
+    # Breusch-Pagan Test
+    bp_test = smd.het_breuschpagan(model.resid,
+        model.model.exog)
+    print(f"Breusch-Pagan p-value: {bp_test[1]}")
+\end{lstlisting}
+
+The residuals should not be correlated. This is important in time series data, where autocorrelation can be a common issue.
+Verification methods include autocorrelation function (ACF) plot by plotting the ACF of the residuals to check for significant autocorrelation at different lags.
+Durbin-Watson test by performing the Durbin-Watson test to statistically assess the presence of autocorrelation, where a value close to 2 indicates no autocorrelation, values less than 2 indicate positive autocorrelation, and values greater than 2 indicate negative autocorrelation.
+
+\begin{lstlisting}[caption={Checking autocorrelation of residuals}]
+    from statsmodels.stats.stattools import durbin_Watson
+
+    dw_stat = durbin_watson(model.resid)
+    print(f"Durbin-Watson Statistic: {dw_stat}")
+\end{lstlisting}
+
+The residuals should be approximately normally distributed, which is important for the validity of hypothesis tests and confidence intervals in OLS regression.
+Verification methods include Q-Q plot by creating a Q-Q plot of the residuals to visually assess their normality, where points should approximately follow a straight line if the residuals are normally distributed.
+Shapiro-Wilk test by performing the Shapiro-Wilk test to statistically assess the normality of the residuals, where a significant p-value indicates that the residuals are not normally distributed.
+Histogram and KDE plot by plotting a histogram and kernel density estimate (KDE) of the residuals to visually assess their distribution, where a bell-shaped curve suggests normality.
+
+\begin{lstlisting}[caption={Checking normality of residuals}]
+    import scipy.stats as stats
+
+    # Histogram and KDE
+    sns.histplot(model.resid, kde=True, bins=30)
+    plt.title("Residuals Distribution")
+    plt.show()
+
+    # Q-Q Plot
+    sm.qqplot(model.resid, line="45")
+    plt.title("Q-Q Plot for Residuals")
+    plt.show()
+
+    # Shapiro-Wilk Test
+    shapiro_test = stats.shapiro(model.resid)
+    print(f"Shapiro-Wilk p-value: {shapiro_test.pvalue}")
+\end{lstlisting}
+
+\nt{
+    The summary() function in Statsmodels provide important regression output, but it does not directly test OLS assumptions.
+    However, it gives useful clues about potential violation.
+    \begin{itemize}
+        \item R-squared and adjusted R-squared: indicate model fit but do not test assumptions.
+        \item F-statistics and Prob (F-statistics): tests if at least one predictor is significant.
+        \item Coefficients and p-values: show predictor significance but do not check multicollinearity.
+        \item Standard errors: can be affected by heteroskedasticity.
+        \item Durbin-Watson statistic: helps detect autocorrelation, should be close to 2.
+        \item Omnibus and Jacque-Bera tests: check for normality of residuals, should have a high p-value.
+    \end{itemize}
+}
+
+\begin{lstlisting}[caption={Fitting an OLS model and checking assumptions}]
+    import statsmodels.api as sm
+
+    model = sm.OLS(y,X).fit()
+    print(model.summary())
+\end{lstlisting}
 
 %\dfn{Definition Topic}{Definition Statement}
 %\thm{Theorem Name}{Theorem Statement}
