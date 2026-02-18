@@ -1,0 +1,62 @@
+\chapter{Data Visualization}
+
+\section{Matplotlib}
+
+Matplotlib is a powerful and versatile Python library for creating static.
+It supports different chart types including scatter plots, line charts, and bar charts.
+While highly flexible, it can sometimes feel verbose for simple visualizations.
+It serves as the backbone for other libraries like Seaborn and Plotly, which build on its capabilities to provide more user-friendly interfaces for specific types of visualizations.
+
+Strengths:
+\begin{itemize}
+    \item Control over plot elements
+    \item Wide range of plot types
+    \item Suitable for publication-quality figures
+\end{itemize}
+
+Weaknesses:
+\begin{itemize}
+    \item Can be verbose for simple plots
+    \item Steeper learning curve for beginners
+\end{itemize}
+
+The building blocks of Matplotlib include:
+\begin{itemize}
+    \item \textbf{Figure}: The overall container for the plot. Includes one or more subplots. It is like a blank canvas where multiple charts can be arranged.
+    \item \textbf{Axes}: The area where the data is plotted, which can contain multiple subplots each displaying a different visualization.
+    \item \textbf{Subplot}: A specific area within the figure where a plot is drawn, allowing for multiple plots in one figure. Useful for comparing different datasets side by side.
+    \item \textbf{Axis}: Corresponds to the x and y axes of a plot, which can be customized with labels, ticks, and limits to enhance readability and presentation.
+\end{itemize}
+
+\begin{lstlisting}
+    import matplotlib.pyplot as plt
+
+    # Figure
+
+    fig = plt.figure(figsize=(8, 6)) # creates a new figure with a specified size of 8 inches by 6 inches. This figure serves as the canvas for plotting.
+    ax = fig.add_subplot(111) # adds a single subplot to the figure. The '111' argument indicates that the subplot should occupy the entire figure (1 row, 1 column, 1st subplot).
+    plt.show() # displays the figure with the subplot. Since no data has been plotted yet, it will show an empty plot.
+
+    # Axes
+    fig, ax = plt.subplots() # creates a new figure and a single set of axes (subplot) in one step. This is a more concise way to create a figure and axes compared to the previous method.
+    ax.plot([1, 2, 3], [4, 5, 6]) # plots a line graph on the axes using the provided x and y data points. The x values are [1, 2, 3] and the corresponding y values are [4, 5, 6].
+    plt.show() # displays the figure with the plotted line graph.
+
+    # Subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2) # creates a new figure with two subplots arranged in one row and two columns. The variables ax1 and ax2 refer to the first and second subplot, respectively.
+    ax1.plot([1, 2, 3], [4, 5, 6], label="Dataset 1") # plots a line graph on the first subplot (ax1) using the provided x and y data points.
+    ax2.scatter([1, 2, 3], [4, 5, 6], color="r", label="Dataset 2") # plots a scatter graph on the second subplot (ax2) using the same x and y data points.
+    plt.show() # displays the figure with both subplots: the first showing a line graph and the second showing a scatter graph.
+
+    # Axis
+    fig, ax = plt.subplots() # creates a new figure and a single set of axes (subplot) in one step.
+    ax.plot([1, 2, 3], [4, 5, 6]) # plots a line graph on the axes using the provided x and y data points.
+    ax.set_xlabel("X-axis Label") # sets the label for the x-axis to "X-axis Label", which helps to identify what the x-axis represents.
+    ax.set_ylabel("Y-axis Label") # sets the label for the y-axis to "Y-axis Label", which helps to identify what the y-axis represents.
+    ax.set_title("Line Graph") # sets the title of the plot to "Line Graph", providing a descriptive heading for the visualization.
+    plt.show() # displays the figure with the plotted line graph, including the x and y axis labels and the title.
+\end{lstlisting}
+
+\section{Other libraries}
+
+Can also use the combination of Pandas and Seaborn for quick and easy data visualization, especially for statistical plots.
