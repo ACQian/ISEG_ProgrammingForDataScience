@@ -1,0 +1,35 @@
+{
+  "chart": {
+    "title": "Share of final energy use that comes from renewable sources",
+    "subtitle": "Renewable energy includes solar, wind, geothermal, hydropower, bioenergy, and marine sources.",
+    "citation": "United Nations Statistics Division and International Energy Agency and International Renewable Energy Agency",
+    "originalChartUrl": "https://ourworldindata.org/grapher/share-of-final-energy-consumption-from-renewable-sources?v=1&csvType=full&useColumnShortNames=false",
+    "selection": [
+      "World",
+      "Europe",
+      "Asia",
+      "Africa",
+      "Northern America"
+    ]
+  },
+  "columns": {
+    "7.2.1 - Renewable energy share in the total final energy consumption (%) - EG_FEC_RNEW": {
+      "titleShort": "Renewable energy share in the total final energy consumption (%)",
+      "titleLong": "Renewable energy share in the total final energy consumption (%)",
+      "descriptionShort": "Renewable energy share in the total final energy consumption (%)",
+      "shortUnit": "%",
+      "unit": "%",
+      "timespan": "2000-2022",
+      "type": "Numeric",
+      "owidVariableId": 1128056,
+      "shortName": "_7_2_1__eg_fec_rnew",
+      "lastUpdated": "2025-10-29",
+      "nextUpdate": "2027-10-29",
+      "citationShort": "United Nations Statistics Division and International Energy Agency and International Renewable Energy Agency – processed by Our World in Data",
+      "citationLong": "United Nations Statistics Division and International Energy Agency and International Renewable Energy Agency – processed by Our World in Data. “Renewable energy share in the total final energy consumption (%)” [dataset]. United Nations Statistics Division and International Energy Agency and International Renewable Energy Agency, “IEA (2024), World Energy Balances; Energy Balances, UN Statistics Division (2024), IEA (2024), World Energy Balances, Energy Balances, UN Statistics Division (2024)” [original data].",
+      "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1128056.metadata.json"
+    }
+  },
+  "dateDownloaded": "2026-03-11",
+  "activeFilters": {}
+}
