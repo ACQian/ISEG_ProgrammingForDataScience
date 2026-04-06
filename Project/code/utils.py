@@ -73,7 +73,7 @@ class PanelDataProcessor:
         df = pd.read_csv(self.owid_path)
 
         # Ensure standard types for merging
-        df.dropna(subset=['year', 'iso_code'], inplace=True) # ISO code is crucial for a global panel merge
+        df.dropna(subset=['year', 'iso_code'], inplace=True)
         df['year'] = df['year'].astype(int)
 
         self.owid_data = df
@@ -88,18 +88,12 @@ class PanelDataProcessor:
         if self.wb_data is None or self.owid_data is None:
             raise ValueError("Datasets have not been loaded and cleaned yet. Run cleaning methods first.")
 
-        # We perform an outer merge to capture all country-years, 
-        # or you can use 'inner' if you only want rows present in BOTH datasets.
-        # Here we use 'outer' to retain maximum data
-
-        # Notice we merge on both 'iso_code' and 'year'
-        # We also drop the duplicated 'country' column from one of the sets before merging to avoid country_x, country_y
         owid_drop_country = self.owid_data.drop(columns=['country'])
 
         self.panel_data = pd.merge(
-            self.wb_data, 
-            owid_drop_country, 
-            on=['iso_code', 'year'], 
+            self.wb_data,
+            owid_drop_country,
+            on=['iso_code', 'year'],
             how='outer'
         )
 
