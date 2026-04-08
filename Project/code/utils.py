@@ -122,3 +122,106 @@ class PanelDataProcessor:
         self.merge_to_panel()
         self.save_panel_data(output_filename)
         return self.panel_data
+
+
+class PanelDataCleaner:
+    def __init__(self, input_filepath):
+        """
+        Initialize by loading the merged panel dataset.
+        """
+        print(f"Loading data from {input_filepath}...")
+        self.df = pd.read_csv(input_filepath)
+
+    def filter_years(self, start_year, end_year):
+        """
+        Filter the panel dataset to a specific time period.
+        """
+        print(f"Filtering dataset for years {start_year} to {end_year}...")
+        mask = (self.df['year'] >= start_year) & (self.df['year'] <= end_year)
+        self.df = self.df[mask].copy()
+
+    def trim_variables(self):
+        """
+        Keep only the variables of interest.
+        """
+        print("Trimming variables...")
+
+        variables_to_keep = [
+            # Identifiers
+            'country', 'iso_code', 'year',
+
+            # Dependent Variable
+            'renewable_energy_share_pct',
+
+            # Independent Variables
+            'access_to_clean_cooking_pct',
+            'land_area_sq_km',
+            'gdp_per_capita',
+            'fossil_electricity',
+            'nuclear_electricity',
+            'energy_per_capita',
+            'co2_emissions_per_capita',
+
+            # Bonus Controls
+            'access_to_electricity_pct',
+            'gdp_growth_pct',
+            'population_density',
+            'low_carbon_electricity',
+            'low_carbon_share_energy',
+            'greenhouse_gas_emissions',
+            'electricity_demand'
+        ]
+
+        # Keep only the columns that actually exist in the dataframe to avoid KeyErrors
+        available_cols = [col for col in variables_to_keep if col in self.df.columns]
+        self.df = self.df[available_cols].copy()
+
+    def impute_missing_values(self):
+        """
+        Impute missing values per country:
+        1. Linear interpolation (median between values) for gaps in the middle.
+        2. Forward fill for newer missing years (takes previous valid year).
+        3. Backward fill for older missing years (takes future valid year).
+        """
+        print("Imputing missing values...")
+
+        # Ensure data is sorted properly before filling
+        self.df.sort_values(by=['iso_code', 'year'], inplace=True)
+
+        def fill_country_gaps(group):
+            # 1. Fill middle gaps mathematically
+            group = group.interpolate(method='linear')
+            # 2. Fill newest years with the most recent available data
+            group = group.ffill()
+            # 3. Fill oldest years with the earliest available data
+            group = group.bfill()
+            return group
+
+        # Identify only numeric columns
+        numeric_cols = self.df.select_dtypes(include=[np.number]).columns.drop('year')
+
+        # Apply the filling logic, grouping by country so data doesn't bleed across borders
+        self.df[numeric_cols] = self.df.groupby('iso_code', group_keys=False)[numeric_cols].apply(fill_country_gaps)
+
+    def save_data(self, output_filename):
+        """
+        Export the finalized, cleaned panel dataset.
+        """
+        self.df.to_csv(output_filename, index=False)
+        print(f"Data successfully saved to {output_filename}")
+        print(f"Final dataset shape: {self.df.shape}")
+
+    def run_cleaning_pipeline(self, start_year=2012, end_year=2021, output_filename='Final_Cleaned_Panel.csv'):
+        """
+        Orchestrator function to run all cleaning steps in order.
+        """
+        self.filter_years(start_year, end_year)
+        self.trim_variables()
+        self.impute_missing_values()
+
+        # Drop rows where the dependent variable is STILL missing after all imputation
+        # (This happens if a country has zero data for renewable energy across all years)
+        self.df.dropna(subset=['renewable_energy_share_pct'], inplace=True)
+
+        self.save_data(output_filename)
+        return self.df
