@@ -1,15 +1,21 @@
-# Necessary imports
+# Necessary Imports
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-# Libraries for Multicollinearity and Factor Analysis checks
+# Libraries for Multicollinearity and Factor Analysis
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.preprocessing import StandardScaler
 from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity, calculate_kmo
 from factor_analyzer import FactorAnalyzer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+# Libraries for Time Series Analysis
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+# Libraries for Econometrics Modeling
+import statsmodels.api as sm
+from linearmodels.panel import PanelOLS
 
 
 class PanelDataProcessor:
@@ -358,173 +364,6 @@ class DataExploration:
         self.factor_analysis_prerequisites()
 
 
-class AdvancedDataProcessing:
-    def __init__(self, dataframe, target_variable):
-        """
-        Initialize the class with the cleaned panel dataframe.
-        Separates the Dependent Variable from the Independent Variables.
-        """
-        self.df = dataframe.copy()
-        self.target_variable = target_variable
-
-        # Drop rows with NaN in independent vars so our math doesn't fail
-        self.df.dropna(inplace=True)
-
-        # Separate X (Independent) and Y (Dependent)
-        self.y = self.df[self.target_variable]
-
-        # Select only numeric independent columns (dropping identifiers like Country/Year)
-        numeric_cols = self.df.select_dtypes(include=[np.number]).columns.tolist()
-        if 'year' in numeric_cols:
-            numeric_cols.remove('year')
-        if target_variable in numeric_cols:
-            numeric_cols.remove(target_variable)
-
-        self.X = self.df[numeric_cols]
-        print(f"Initialized with {self.X.shape[1]} independent variables.")
-
-    def handle_outliers(self, lower_percentile=0.01, upper_percentile=0.99):
-        """
-        Applies Winsorization: Caps extreme outliers at the 1st and 99th percentiles.
-        This prevents massive countries (like Russia) from dominating the variance.
-        """
-        print(f"\n--- Handling Outliers (Capping at {lower_percentile*100}th and {upper_percentile*100}th percentiles) ---")
-
-        for col in self.X.columns:
-            lower_bound = self.X[col].quantile(lower_percentile)
-            upper_bound = self.X[col].quantile(upper_percentile)
-
-            # Clip the values so anything below lower_bound becomes lower_bound, etc.
-            self.X[col] = self.X[col].clip(lower=lower_bound, upper=upper_bound)
-
-        print("Outliers capped successfully.")
-
-    def handle_skewed_distributions(self, skew_threshold=1.5):
-        """
-        Detects highly skewed variables and applies a logarithmic transformation.
-        Adjusts for negative values (like GDP growth) before applying the log.
-        """
-        print(f"\n--- Handling Skewed Distributions (Threshold: |Skew| > {skew_threshold}) ---")
-
-        skewness = self.X.skew()
-        highly_skewed_cols = skewness[abs(skewness) > skew_threshold].index.tolist()
-
-        print(f"Highly skewed variables detected: {highly_skewed_cols}")
-
-        for col in highly_skewed_cols:
-            min_val = self.X[col].min()
-
-            # If the variable has negative values or zeros, we shift it to be > 0 before taking the log
-            # np.log1p computes log(1 + x) which is great for variables with zeros
-            if min_val < 0:
-                self.X[col] = np.log1p(self.X[col] - min_val)
-            else:
-                self.X[col] = np.log1p(self.X[col])
-
-        print("Log transformations applied to skewed variables.")
-
-    def drop_highly_correlated(self, threshold=0.80):
-        """
-        Identifies and drops variables that have a Pearson correlation higher than the threshold.
-        """
-        print(f"\n--- Dropping Highly Correlated Variables (Threshold: {threshold}) ---")
-
-        corr_matrix = self.X.corr().abs()
-        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-        to_drop = [column for column in upper.columns if any(upper[column] > threshold)]
-
-        print(f"Variables dropped due to correlation > {threshold}: {to_drop}")
-
-        self.X = self.X.drop(columns=to_drop)
-        print(f"Remaining variables: {self.X.columns.tolist()}")
-
-    def standardize_data(self):
-        """
-        Scales the independent variables using StandardScaler (mean=0, variance=1).
-        """
-        print("\n--- Standardizing (Scaling) Variables ---")
-        scaler = StandardScaler()
-
-        scaled_array = scaler.fit_transform(self.X)
-        self.X_scaled = pd.DataFrame(scaled_array, columns=self.X.columns, index=self.X.index)
-
-        print("Data successfully scaled (Mean ~ 0, Standard Deviation = 1).")
-
-    def plot_updated_heatmap(self, output_file='reduced_correlation_heatmap.png'):
-        """
-        Plots the correlation heatmap for the scaled, reduced variables.
-        """
-        print("\n--- Plotting Updated Heatmap ---")
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(self.X_scaled.corr(), annot=True, cmap='coolwarm', fmt=".2f", vmin=-1, vmax=1)
-        plt.title("Correlation Matrix After Outlier/Skew Fixes & Dropping Vars", fontsize=14)
-        plt.xticks(rotation=45, ha='right')
-        plt.tight_layout()
-        plt.savefig(output_file)
-        # plt.show() # Uncomment if running in a notebook cell to view inline
-        print(f"Heatmap saved as '{output_file}'.")
-
-    def recheck_vif(self):
-        """
-        Recalculates the Variance Inflation Factor to ensure multicollinearity is resolved.
-        """
-        print("\n--- Re-checking Multicollinearity (VIF) ---")
-        vif_data = pd.DataFrame()
-        vif_data["Variable"] = self.X_scaled.columns
-        vif_data["VIF"] = [
-            variance_inflation_factor(self.X_scaled.values, i) 
-            for i in range(self.X_scaled.shape[1])
-        ]
-        vif_data.sort_values(by="VIF", ascending=False, inplace=True)
-        print(vif_data.to_string(index=False))
-
-    def test_factor_analysis_readiness(self):
-        """
-        Runs Bartlett's and KMO tests on the clean, scaled independent dataset.
-        """
-        print("\n--- Testing Factor Analysis Readiness ---")
-
-        # Bartlett’s Test
-        chi_square_value, p_value = calculate_bartlett_sphericity(self.X_scaled)
-        print(f"Bartlett's Test P-value: {p_value}")
-        if p_value < 0.05:
-            print("  -> SUCCESS: Variables are correlated enough for Factor Analysis.")
-        else:
-            print("  -> WARNING: Variables are not correlated enough.")
-
-        # KMO Test
-        kmo_all, kmo_model = calculate_kmo(self.X_scaled)
-        print(f"Overall KMO Score: {kmo_model:.3f}")
-        if kmo_model >= 0.60:
-            print("  -> SUCCESS: KMO score is adequate for Factor Analysis.")
-        else:
-            print("  -> WARNING: KMO score is below 0.60. Factor Analysis might not yield distinct groups.")
-
-    def run_pipeline(self):
-        """
-        Runs the full processing pipeline in logical statistical order.
-        """
-        # 1. Cap outliers first so they don't distort the skewness test
-        self.handle_outliers()
-
-        # 2. Fix skewness so correlations aren't dominated by long tails
-        self.handle_skewed_distributions()
-
-        # 3. Drop highly correlated variables
-        self.drop_highly_correlated(threshold=0.80)
-
-        # 4. Standardize the fixed data
-        self.standardize_data()
-
-        # 5. Review results
-        self.plot_updated_heatmap()
-        self.recheck_vif()
-        self.test_factor_analysis_readiness()
-
-        # Return the final scaled X dataset, and the separate y variable for modeling
-        return self.X_scaled, self.y
-
-
 class FactorAnalysisPrep:
     def __init__(self, dataframe, target_variable):
         """
@@ -740,3 +579,385 @@ class CountryProfiler:
 
         print("\nProfiling Complete! Final dataframe is ready for Time Series / FE modeling.")
         return final_df
+
+
+class TimeSeriesAnalyzer:
+    def __init__(self, dataframe, target_var='renewable_energy_share_pct', time_var='year', cluster_var='Profile_Cluster'):
+        """
+        Initializes the Time Series Analyzer.
+        """
+        self.df = dataframe.copy()
+        self.target = target_var
+        self.time = time_var
+        self.cluster = cluster_var
+
+        # Create a Global Time Series (Average of all countries per year)
+        self.global_ts = self.df.groupby(self.time)[self.target].mean()
+
+        # Create a Cluster-based Time Series (Average per cluster per year)
+        if self.cluster in self.df.columns:
+            self.cluster_ts = self.df.groupby([self.time, self.cluster])[self.target].mean().unstack()
+        else:
+            self.cluster_ts = None
+
+        print(f"Initialized Time Series Analyzer for '{self.target}' ({self.df[self.time].min()} - {self.df[self.time].max()})")
+
+    def plot_macro_trends(self):
+        """
+        1. Macro Trend Analysis
+        Purpose: Visualizes the overall trajectory of renewable adoption. 
+        Insight: Are we actually transitioning globally? Are the profiles moving at the same speed?
+        """
+        print("\n--- 1. Macro Trend Analysis ---")
+        plt.figure(figsize=(10, 6))
+
+        # Plot Global Trend
+        plt.plot(self.global_ts.index, self.global_ts.values, label='Global Average',
+                 linewidth=3, color='black', linestyle='--')
+
+        # Plot Cluster Trends
+        if self.cluster_ts is not None:
+            for cluster in self.cluster_ts.columns:
+                plt.plot(self.cluster_ts.index, self.cluster_ts[cluster], 
+                         label=f'Profile Cluster {cluster}', linewidth=2)
+
+        plt.title(f"Macro Trend: {self.target} Over Time", fontsize=14)
+        plt.xlabel("Year")
+        plt.ylabel(f"Average {self.target}")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("TSA_Macro_Trends.png")
+        plt.show()
+        print("Saved 'TSA_Macro_Trends.png'.")
+
+    def test_stationarity(self):
+        """
+        2. Augmented Dickey-Fuller (ADF) Test
+        Purpose: Checks if the data is "Stationary" (has a constant mean and variance over time).
+        Insight: If data is NON-stationary (trending endlessly), running standard Fixed Effects
+        regressions can lead to "Spurious Regressions" (fake statistical significance). You might
+        need to use the First-Difference of the variable in your final model.
+        """
+        print("\n--- 2. Stationarity Test (Augmented Dickey-Fuller) ---")
+
+        # Run ADF on the global average
+        result = adfuller(self.global_ts.dropna())
+
+        print(f"ADF Statistic: {result[0]:.4f}")
+        print(f"P-value: {result[1]:.4f}")
+
+        if result[1] < 0.05:
+            print("Conclusion: The series is STATIONARY (Reject the null hypothesis).")
+            print("Econometric Impact: Safe to use standard Fixed/Random Effects modeling.")
+        else:
+            print("Conclusion: The series is NON-STATIONARY (Fail to reject null hypothesis).")
+            print("Econometric Impact: The variable has a time-trend. You should include 'Year' fixed effects in your final model, or use the Year-over-Year change (first difference).")
+
+    def plot_autocorrelation(self, lags=4):
+        """
+        3. Autocorrelation (ACF) & Partial Autocorrelation (PACF)
+        Purpose: Measures how much "inertia" the variable has. Does last year's adoption rate perfectly predict this year's?
+        Insight: If autocorrelation is extremely high, your model will suffer from Serial Correlation.
+        You may need a "Dynamic Panel Model" (like Arellano-Bond) or to include a lagged dependent variable (t-1).
+        """
+        print("\n--- 3. Autocorrelation Analysis (Inertia) ---")
+
+        # We use a small number of lags because panel timeframes are usually short (e.g., 10 years)
+        max_lags = min(lags, len(self.global_ts) - 2)
+
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+        # ACF Plot
+        plot_acf(self.global_ts.dropna(), ax=axes[0], lags=max_lags, title="Autocorrelation (ACF)")
+        axes[0].set_xlabel("Lags (Years)")
+        axes[0].set_ylabel("Correlation")
+
+        # PACF Plot
+        plot_pacf(self.global_ts.dropna(), ax=axes[1], lags=max_lags, title="Partial Autocorrelation (PACF)")
+        axes[1].set_xlabel("Lags (Years)")
+        axes[1].set_ylabel("Correlation")
+
+        plt.tight_layout()
+        plt.savefig("TSA_Autocorrelation.png")
+        plt.show()
+
+        print(f"Saved 'TSA_Autocorrelation.png'.")
+        print("Interpretation: If the bar at Lag 1 is very tall (close to 1.0), renewable energy adoption is highly path-dependent.")
+
+    def analyze_convergence(self):
+        """
+        4. Convergence / Divergence Analysis (Variance over time)
+        Purpose: Calculates the Standard Deviation of countries for each year.
+        Insight: Are countries adopting similar renewable shares over time (Convergence / SD going down)? 
+        Or is the gap between the Green Leaders and Fossil Reliants widening (Divergence / SD going up)?
+        """
+        print("\n--- 4. Policy Convergence Analysis ---")
+
+        # Calculate standard deviation across all countries for each year
+        variance_ts = self.df.groupby(self.time)[self.target].std()
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(variance_ts.index, variance_ts.values, color='purple', marker='o', linewidth=2)
+        plt.title("Convergence Check: Standard Deviation of Renewable Adoption Over Time", fontsize=14)
+        plt.xlabel("Year")
+        plt.ylabel(f"Standard Deviation of {self.target}")
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("TSA_Convergence.png")
+        plt.show()
+
+        print("Saved 'TSA_Convergence.png'.")
+
+        # Simple trend check
+        if variance_ts.iloc[-1] < variance_ts.iloc[0]:
+            print("Conclusion: CONVERGENCE detected. The gap between countries is shrinking.")
+        else:
+            print("Conclusion: DIVERGENCE detected. The gap between leading and lagging countries is widening.")
+
+    def run_all(self):
+        """
+        Executes all time series analyses.
+        """
+        self.plot_macro_trends()
+        self.test_stationarity()
+        self.plot_autocorrelation()
+        self.analyze_convergence()
+        print("\nTime Series Analysis Complete!")
+
+
+class AdvancedDataProcessing:
+    def __init__(self, dataframe, target_variable):
+        """
+        Takes the Final Panel (which contains your 18 cleaned variables + Profile Cluster).
+        Automatically detects the independent variables.
+        """
+        self.df = dataframe.copy()
+        self.target_variable = target_variable
+
+        # Automatically detect all numeric columns
+        all_numeric_cols = self.df.select_dtypes(include=[np.number]).columns.tolist()
+
+        # Exclude structural columns from independent variable processing
+        exclude_cols = ['year', 'Profile_Cluster', self.target_variable]
+
+        # Dynamically set the independent variables to process
+        self.raw_independent_vars = [col for col in all_numeric_cols if col not in exclude_cols]
+
+        print(f"Initialized AdvancedDataProcessing.")
+        print(f"Dynamically detected {len(self.raw_independent_vars)} independent variables from the cleaned panel.")
+
+    def handle_outliers(self):
+        """Caps extreme outliers at the 1st and 99th percentiles."""
+        print("\n--- Handling Outliers (Winsorizing at 1% and 99%) ---")
+        for col in self.raw_independent_vars:
+            lower = self.df[col].quantile(0.01)
+            upper = self.df[col].quantile(0.99)
+            self.df[col] = self.df[col].clip(lower=lower, upper=upper)
+
+    def handle_skewed_distributions(self):
+        """Applies a logarithmic transformation to heavily skewed variables."""
+        print("\n--- Applying Log Transformations to Skewed Variables ---")
+        skewness = self.df[self.raw_independent_vars].skew()
+        skewed_cols = skewness[abs(skewness) > 1.5].index.tolist()
+
+        for col in skewed_cols:
+            min_val = self.df[col].min()
+            if min_val < 0:
+                self.df[col] = np.log1p(self.df[col] - min_val)
+            else:
+                self.df[col] = np.log1p(self.df[col])
+
+        print(f"Log transformed variables: {skewed_cols}")
+
+    def drop_highly_correlated(self, threshold=0.80):
+        """Drops variables with a correlation > threshold."""
+        print(f"\n--- Dropping Highly Correlated Variables (> {threshold}) ---")
+
+        X = self.df[self.raw_independent_vars]
+        corr_matrix = X.corr().abs()
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+
+        to_drop = [column for column in upper.columns if any(upper[column] > threshold)]
+        print(f"Variables dropped due to multicollinearity: {to_drop}")
+
+        self.surviving_vars = [var for var in self.raw_independent_vars if var not in to_drop]
+        print(f"Surviving independent variables for regression: {len(self.surviving_vars)}")
+
+    def run_pipeline(self):
+        self.handle_outliers()
+        self.handle_skewed_distributions()
+        self.drop_highly_correlated()
+
+        print("\nData Processing Complete! Ready for Econometrics.")
+        return self.df, self.surviving_vars
+
+
+class AdvancedPanelModeler:
+    def __init__(self, dataframe, independent_vars, target_var='renewable_energy_share_pct', cluster_var='Profile_Cluster'):
+        """
+        Takes the transformed dataframe and dynamic variables directly from Step 7.
+        """
+        self.df = dataframe.copy()
+
+        # Ensure iso_code and year are set as the MultiIndex (required for linearmodels)
+        if 'iso_code' in self.df.columns and 'year' in self.df.columns:
+            self.df = self.df.set_index(['iso_code', 'year'])
+
+        self.target = target_var
+        self.cluster = cluster_var
+
+        # Keep only the dynamically passed variables that actually exist in the dataframe
+        self.independent_vars = [var for var in independent_vars if var in self.df.columns]
+
+        print("\nInitialized AdvancedPanelModeler.")
+        print(f"Ready to run econometrics on {len(self.independent_vars)} independent variables.")
+
+    def run_pw2008_cre_fractional_probit(self, cluster_id):
+        """
+        Papke & Wooldridge (2008): Correlated Random Effects (CRE) Fractional Probit.
+        Uses the Mundlak device to control for unobserved heterogeneity.
+        """
+        print(f"\n{'='*70}")
+        print(f" PAPKE & WOOLDRIDGE (2008) CRE FRACTIONAL PROBIT: CLUSTER {cluster_id}")
+        print(f"{'='*70}")
+
+        cluster_data = self.df[self.df[self.cluster] == cluster_id].copy()
+
+        # We need the index 'iso_code' available as a column for grouping
+        reg_data = cluster_data[[self.target] + self.independent_vars].dropna().reset_index()
+
+        # 1. Convert Target to Fraction (0.0 to 1.0)
+        y_frac = reg_data[self.target] / 100.0
+        X = reg_data[self.independent_vars]
+
+        # 2. Chamberlain-Mundlak Device: Calculate country-level means for all X variables
+        X_means = X.groupby(reg_data['iso_code']).transform('mean')
+        X_means.columns = [f"{col}_mean" for col in X_means.columns]
+
+        # Combine original X, the Mundlak means, and a constant
+        X_combined = pd.concat([X, X_means], axis=1)
+        X_combined = sm.add_constant(X_combined)
+
+        try:
+            # Fit GLM with Binomial family and Probit link
+            glm_model = sm.GLM(y_frac, X_combined, family=sm.families.Binomial(link=sm.families.links.Probit()))
+
+            # Cluster standard errors by country (iso_code)
+            results = glm_model.fit(cov_type='cluster', cov_kwds={'groups': reg_data['iso_code']})
+            # print(results.summary()) # Uncomment if you want the raw statsmodels output too
+            return results
+        except Exception as e:
+            print(f"PW2008 Model failed: {e}")
+            return None
+
+    def run_ramalho2017_transformed_fe(self, cluster_id):
+        """
+        Ramalho & Ramalho (2017): Log-Odds Transformation for Panel Fixed Effects.
+        """
+        print(f"\n{'='*70}")
+        print(f" RAMALHO (2017) TRANSFORMED FIXED EFFECTS: CLUSTER {cluster_id}")
+        print(f"{'='*70}")
+
+        cluster_data = self.df[self.df[self.cluster] == cluster_id].copy()
+        reg_data = cluster_data[[self.target] + self.independent_vars].dropna()
+
+        # 1. Convert Target to Fraction
+        y_frac = reg_data[self.target] / 100.0
+
+        # 2. Boundary Adjustment (Log-odds cannot mathematically handle exact 0 or 1)
+        y_frac_adj = np.clip(y_frac, 0.001, 0.999)
+
+        # 3. Apply the Log-Odds Transformation
+        y_trans = np.log(y_frac_adj / (1 - y_frac_adj))
+
+        X = reg_data[self.independent_vars]
+        X = sm.add_constant(X)
+
+        try:
+            # Run Panel Fixed Effects
+            model = PanelOLS(y_trans, X, entity_effects=True, time_effects=True)
+            results = model.fit(cov_type='robust')
+            # print(results.summary) # Uncomment if you want the raw linearmodels output too
+            return results
+        except Exception as e:
+            print(f"Ramalho2017 Model failed: {e}")
+            return None
+
+
+def generate_comparison_table(pw_results, ramalho_results, cluster_id):
+    """Helper function to print a clean, publication-style comparison table."""
+    print(f"\n\n{'*'*80}")
+    print(f" FINAL ECONOMETRIC COMPARISON: PROFILE CLUSTER {cluster_id}")
+    print(f" Dependent Variable: Renewable Energy Share (%)")
+    print(f"{'*'*80}")
+
+    pw_df, ram_df = pd.DataFrame(), pd.DataFrame()
+
+    if pw_results is not None:
+        pw_df['PW_Coef'] = pw_results.params
+        pw_df['PW_Pval'] = pw_results.pvalues
+
+    if ramalho_results is not None:
+        ram_df['Ram_Coef'] = ramalho_results.params
+        ram_df['Ram_Pval'] = ramalho_results.pvalues
+
+    comparison = pd.concat([pw_df, ram_df], axis=1)
+
+    def format_output(row, prefix):
+        coef = row.get(f'{prefix}_Coef')
+        pval = row.get(f'{prefix}_Pval')
+        if pd.isna(coef) or pd.isna(pval): return "-"
+        stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else ""
+        return f"{coef:>8.4f} {stars:<3}"
+
+    comparison['PW2008 (CRE Probit)'] = comparison.apply(lambda r: format_output(r, 'PW'), axis=1)
+    comparison['Ramalho2017 (Log-Odds FE)'] = comparison.apply(lambda r: format_output(r, 'Ram'), axis=1)
+
+    final_table = comparison[['PW2008 (CRE Probit)', 'Ramalho2017 (Log-Odds FE)']]
+
+    # Push Mundlak means to the bottom
+    main_vars = [idx for idx in final_table.index if not str(idx).endswith('_mean')]
+    mean_vars = [idx for idx in final_table.index if str(idx).endswith('_mean')]
+    final_table = final_table.loc[main_vars + mean_vars]
+
+    print(final_table.to_string())
+    print("-" * 80)
+    print(" Significance levels:  *** p<0.01,  ** p<0.05,  * p<0.10")
+    print(" Note: Magnitudes are not directly comparable due to different link functions.")
+    return final_table
+
+
+# ==========================================
+# RUNNING DEMONSTRATION (COPY-PASTE THIS INTO YOUR NOTEBOOK)
+# ==========================================
+if __name__ == "__main__":
+    # --- Assumptions for Demo ---
+    # We assume 'transformed_df' and 'dynamic_vars' are actively in memory 
+    # from your run of the AdvancedDataProcessing class (Step 7).
+    
+    # Initialize Step 8: The Econometric Modeler
+    modeler = AdvancedPanelModeler(
+        dataframe=transformed_df,       # Fed directly from Step 7
+        independent_vars=dynamic_vars,  # Fed directly from Step 7
+        target_var='renewable_energy_share_pct',
+        cluster_var='Profile_Cluster'
+    )
+    
+    # --- Analyze Profile Cluster 0 ---
+    pw_c0 = modeler.run_pw2008_cre_fractional_probit(cluster_id=0)
+    ram_c0 = modeler.run_ramalho2017_transformed_fe(cluster_id=0)
+    
+    # Print the clean comparison table for Cluster 0
+    table_c0 = generate_comparison_table(pw_c0, ram_c0, cluster_id=0)
+    
+    # --- Analyze Profile Cluster 1 ---
+    pw_c1 = modeler.run_pw2008_cre_fractional_probit(cluster_id=1)
+    ram_c1 = modeler.run_ramalho2017_transformed_fe(cluster_id=1)
+    
+    # Print the clean comparison table for Cluster 1
+    table_c1 = generate_comparison_table(pw_c1, ram_c1, cluster_id=1)
+    
+    # Optional: Save tables to CSV for your final thesis write-up
+    # table_c0.to_csv("Cluster_0_Regression_Results.csv")
+    # table_c1.to_csv("Cluster_1_Regression_Results.csv")
