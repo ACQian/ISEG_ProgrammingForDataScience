@@ -1,0 +1,16 @@
+Variable,VIF
+electricity_demand,6540.638114855098
+fossil_electricity,4475.7557673588535
+low_carbon_electricity,706.5709491090936
+greenhouse_gas_emissions,353.6826858540275
+access_to_electricity_pct,110.59945391312081
+access_to_clean_cooking_pct,98.56041707597404
+energy_per_capita,26.137738863238507
+co2_emissions_per_capita,25.97292809431343
+low_carbon_share_energy,12.780546927457822
+renewable_energy_share_pct,11.340103222989711
+nuclear_electricity,7.174777397851593
+population_density,2.779616040315323
+land_area_sq_km,2.332549001913549
+gdp_growth_pct,1.3869663615225531
+gdp_per_capita,1.0848153974340244
