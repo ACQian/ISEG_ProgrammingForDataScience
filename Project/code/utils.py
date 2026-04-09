@@ -627,11 +627,15 @@ class FactorAnalysisPrep:
 class CountryProfiler:
     def __init__(self, X_scaled, original_df):
         """
-        Takes the scaled independent variables for math, 
-        and the original dataframe so we can attach the cluster labels back to it.
+        Takes the scaled independent variables for math.
+        Filters the original dataframe to ONLY include the rows that survived 
+        the missing-value drop in the previous step to avoid length mismatches.
         """
         self.X = X_scaled.copy()
-        self.df = original_df.copy()
+
+        # FIX: Filter the original dataframe using the index of the scaled data
+        self.df = original_df.loc[self.X.index].copy()
+
         self.fa_scores = None
 
     def perform_factor_analysis(self):
@@ -713,12 +717,15 @@ class CountryProfiler:
         print(f"\n--- Step 3: Fitting K-Means (K={n_clusters}) ---")
         km = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
 
-        # Predict clusters and attach to original dataframe
+        # Predict clusters and attach to the strictly aligned dataframe
         self.df['Profile_Cluster'] = km.fit_predict(self.fa_scores)
 
         # Print a quick summary of what each profile looks like (using median values to ignore outliers)
-        profile_summary = self.df.groupby('Profile_Cluster')[self.X.columns].median()
-        print("\nMedian Characteristics of Each Profile:")
+        # We need to explicitly check against columns that still exist to avoid errors
+        cols_to_summarize = [col for col in self.X.columns if col in self.df.columns]
+        profile_summary = self.df.groupby('Profile_Cluster')[cols_to_summarize].median()
+
+        print("\nMedian Characteristics of Each Profile (Unscaled Values):")
         print(profile_summary.round(2))
 
         return self.df
@@ -733,18 +740,3 @@ class CountryProfiler:
 
         print("\nProfiling Complete! Final dataframe is ready for Time Series / FE modeling.")
         return final_df
-
-# ==========================================
-# How to run the class
-# ==========================================
-if __name__ == "__main__":
-    # Ensure X_for_FA and df_clean are loaded from your previous Data Prep script
-    # df_clean = pd.read_csv('Cleaned_Analysis_Ready_Panel.csv')
-    
-    profiler = CountryProfiler(X_scaled=X_for_FA, original_df=df_clean)
-    
-    # Run the pipeline
-    final_panel_with_profiles = profiler.run_profiling()
-    
-    # Save the finalized dataset!
-    final_panel_with_profiles.to_csv("Final_Panel_With_Profiles.csv", index=False)
