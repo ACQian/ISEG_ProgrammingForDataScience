@@ -926,38 +926,3 @@ def generate_comparison_table(pw_results, ramalho_results, cluster_id):
     print(" Significance levels:  *** p<0.01,  ** p<0.05,  * p<0.10")
     print(" Note: Magnitudes are not directly comparable due to different link functions.")
     return final_table
-
-
-# ==========================================
-# RUNNING DEMONSTRATION (COPY-PASTE THIS INTO YOUR NOTEBOOK)
-# ==========================================
-if __name__ == "__main__":
-    # --- Assumptions for Demo ---
-    # We assume 'transformed_df' and 'dynamic_vars' are actively in memory 
-    # from your run of the AdvancedDataProcessing class (Step 7).
-    
-    # Initialize Step 8: The Econometric Modeler
-    modeler = AdvancedPanelModeler(
-        dataframe=transformed_df,       # Fed directly from Step 7
-        independent_vars=dynamic_vars,  # Fed directly from Step 7
-        target_var='renewable_energy_share_pct',
-        cluster_var='Profile_Cluster'
-    )
-    
-    # --- Analyze Profile Cluster 0 ---
-    pw_c0 = modeler.run_pw2008_cre_fractional_probit(cluster_id=0)
-    ram_c0 = modeler.run_ramalho2017_transformed_fe(cluster_id=0)
-    
-    # Print the clean comparison table for Cluster 0
-    table_c0 = generate_comparison_table(pw_c0, ram_c0, cluster_id=0)
-    
-    # --- Analyze Profile Cluster 1 ---
-    pw_c1 = modeler.run_pw2008_cre_fractional_probit(cluster_id=1)
-    ram_c1 = modeler.run_ramalho2017_transformed_fe(cluster_id=1)
-    
-    # Print the clean comparison table for Cluster 1
-    table_c1 = generate_comparison_table(pw_c1, ram_c1, cluster_id=1)
-    
-    # Optional: Save tables to CSV for your final thesis write-up
-    # table_c0.to_csv("Cluster_0_Regression_Results.csv")
-    # table_c1.to_csv("Cluster_1_Regression_Results.csv")
