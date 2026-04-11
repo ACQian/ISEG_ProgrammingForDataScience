@@ -1,0 +1,130 @@
+\chapter{Data Science}
+
+\section{Data Preparation}
+\dfn{Missing Values}{
+Handle via \texttt{fillna} (constant/forward/backward), mean/median, \texttt{interpolate}, \texttt{replace}, or \texttt{dropna}.
+}
+\dfn{Normalization vs Standardization}{
+Rescale to [0,1] vs zero-mean/unit-variance; choose based on model sensitivity.
+}
+\dfn{Dummification}{
+Create one-hot/indicator variables for categorical features.
+}
+\subsection*{Pandas Snippets}
+\begin{lstlisting}
+import pandas as pd, numpy as np
+df.fillna(0, inplace=True)                      # constant
+df.fillna(method="ffill", inplace=True)         # forward fill
+df["Gender"].fillna("Unknown", inplace=True)    # categorical
+df["x"].fillna(df["x"].mean(), inplace=True)    # mean impute
+df.replace(np.nan, -99, inplace=True)           # sentinel
+df.interpolate(method="linear", limit_direction="forward", inplace=True)
+df.dropna(axis=0, how="any", inplace=True)      # drop rows with NA
+pd.get_dummies(df, columns=["cat"])             # dummify
+\end{lstlisting}
+
+\section{Exploratory Data Analysis (EDA)}
+\dfn{Content Identification}{
+Understand columns, units, domains; inspect \texttt{dtypes}, uniques.
+}
+\dfn{Variable Types}{
+Categorical vs numerical; continuous vs discrete.
+}
+\dfn{Granularity}{
+Level of detail (row = transaction? day? customer?).
+}
+\dfn{Distribution Analysis}{
+Summary stats + hist/kde/boxplots.
+}
+\dfn{Missingness Assessment}{
+Counts/percents; visualize bars/heatmaps.
+}
+\dfn{Multivariate Analysis}{
+Correlation, sparsity, cross-tabs, pairplots.
+}
+\subsection*{Quick Checks}
+\begin{lstlisting}
+data.dtypes
+cat = data.select_dtypes(include="object")
+for c in cat: print(c, data[c].unique())
+data.isna().sum().plot.bar()
+data.describe(include="all")
+data.corr(numeric_only=True)
+\end{lstlisting}
+
+\section{Evaluation Metrics}
+\dfn{Confusion Matrix}{
+TP, TN, FP, FN for binary classification.
+}
+\dfn{Accuracy}{
+\(\frac{TP+TN}{TP+FP+TN+FN}\); overall correct rate.
+}
+\dfn{Precision}{
+\(\frac{TP}{TP+FP}\); focus when FP cost is high.
+}
+\dfn{Recall}{
+\(\frac{TP}{TP+FN}\); focus when FN cost is high.
+}
+\dfn{Type I / II Errors}{
+FP = Type I; FN = Type II.
+}
+\subsection*{Sklearn Example}
+\begin{lstlisting}
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, accuracy_score
+y_pred = model.predict(X_test)
+print(confusion_matrix(y_test, y_pred))
+print("precision", precision_score(y_test, y_pred))
+print("recall", recall_score(y_test, y_pred))
+print("accuracy", accuracy_score(y_test, y_pred))
+\end{lstlisting}
+
+\section{Process and Methodology}
+\dfn{CRISP-DM / POST-DS}{
+Phases: Business Understanding, Data Understanding, Data Preparation, Modelling, Evaluation, Deployment; POST-DS adds Organization, Scheduling, Tools.
+}
+\dfn{Process vs Organization vs Scheduling vs Tools}{
+Separate concerns: workflow steps, roles/teams, timing, and technical stack.
+}
+
+\section{Reinforcement Learning (Intro)}
+\dfn{Reinforcement Learning}{
+Agent interacts with environment, takes actions, receives rewards, learns policy.
+}
+\dfn{Key Components}{
+Agent, Environment, State, Action, Reward, Policy.
+}
+\dfn{Q-Learning}{
+Learns \(Q(s,a)\) values to choose actions that maximize future reward.
+}
+
+\subsection*{Toy RL Loop (Q-learning skeleton)}
+\begin{lstlisting}
+import numpy as np
+Q = np.zeros((n_states, n_actions))
+alpha, gamma, eps = 0.1, 0.99, 0.1
+for episode in range(500):
+    s = env.reset()
+    done = False
+    while not done:
+        a = np.argmax(Q[s]) if np.random.rand()>eps else np.random.randint(n_actions)
+        s2, r, done, _ = env.step(a)
+        Q[s,a] += alpha * (r + gamma*np.max(Q[s2]) - Q[s,a])
+        s = s2
+\end{lstlisting}
+
+\section{Practice / Exam Prompts}
+\pr{Imputation strategy}{
+Given mixed numeric/categorical data with 5\% missing, propose imputation per type and justify when to drop rows/cols.
+}
+\pr{Granularity check}{
+Explain how to detect granularity issues and why duplicates may indicate wrong grain.
+}
+\pr{Metric choice}{
+Skin-cancer detection vs. spam filter: which metrics to prioritize (recall vs precision) and why.
+}
+\pr{Process mapping}{
+Map a project to POST-DS: list tasks under Process, Organization, Scheduling, Tools.
+}
+\pr{RL components}{
+Identify state/action/reward/policy in a trading-bot example.
+}

@@ -1,0 +1,209 @@
+\chapter{Image Manipulation and Text}
+
+\section{NLP Basics}
+\dfn{Natural Language Processing}{
+Subfield of AI/linguistics/computer science focused on processing and analyzing natural language data.
+}
+\dfn{Tokenization}{
+Split text into minimal units (words/subwords/sentences) for downstream processing.
+}
+\dfn{Stemming vs Lemmatization}{
+Stemming chops affixes to crude roots; lemmatization maps to dictionary form using vocab and POS.
+}
+\dfn{POS Tagging}{
+Assign grammatical category (noun, verb, adj, etc.) to each token.
+}
+\dfn{Named Entity Recognition}{
+Locate and classify spans as persons, locations, orgs, dates, etc.
+}
+\dfn{Sentiment Analysis}{
+Classify polarity of text (positive/negative/neutral).
+}
+\dfn{Language Modeling}{
+Estimate $p(w_t \mid w_{<t})$ to predict next token (autocomplete, MT).
+}
+\dfn{Machine Translation}{
+Map sequence in source language to target language automatically.
+}
+\dfn{Text Summarization}{
+Produce a concise version preserving key information (extractive or abstractive).
+}
+\dfn{Information Extraction}{
+Pull structured facts (entities/relations/events) from unstructured text.
+}
+\dfn{Text Classification}{
+Assign documents to predefined labels (spam, topic, sentiment).
+}
+\dfn{Topic Modeling}{
+Unsupervised discovery of latent themes (e.g., LDA).
+}
+\dfn{Dependency Parsing}{
+Recover syntactic head/dependent relations between words.
+}
+\dfn{Discourse Analysis}{
+Study coherence across sentences (rhetorical structure, cohesion).
+}
+\dfn{Regular Expressions}{
+Patterns for searching/extracting/editing text programmatically.
+}
+\dfn{Web Scraping}{
+Programmatic retrieval/parsing of web pages (e.g., BeautifulSoup over HTML).
+}
+
+\section{NLP Code Snippets (Python)}
+\subsection*{Tokenize, Stem, Lemmatize (NLTK)}
+\begin{lstlisting}
+import nltk
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+nltk.download('punkt'); nltk.download('wordnet')
+
+text = "Cats are happily running."
+tokens = nltk.word_tokenize(text)
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+
+stems = [stemmer.stem(t) for t in tokens]
+lems  = [lemmatizer.lemmatize(t, pos="v") for t in tokens]
+print(tokens); print(stems); print(lems)
+\end{lstlisting}
+
+\subsection*{POS \& NER (spaCy)}
+\begin{lstlisting}
+import spacy
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Apple is looking at buying U.K. startup for $1B.")
+for tok in doc:
+    print(tok.text, tok.pos_, tok.dep_, tok.head.text)
+for ent in doc.ents:
+    print(ent.text, ent.label_)
+\end{lstlisting}
+
+\subsection*{Regex extraction}
+\begin{lstlisting}
+import re
+text = "Contact us at support@example.com or hr@example.org"
+emails = re.findall(r"[\\w.-]+@[\\w.-]+", text)
+print(emails)
+\end{lstlisting}
+
+\subsection*{Bag-of-Words + TF-IDF + Linear Classifier}
+\begin{lstlisting}
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+X = ["I love this movie", "Terrible acting", "Great plot", "Worst film ever"]
+y = [1, 0, 1, 0]  # 1=pos, 0=neg
+clf = make_pipeline(TfidfVectorizer(), LogisticRegression())
+clf.fit(X, y)
+print(clf.predict(["fantastic performance", "awful script"]))
+\end{lstlisting}
+
+\section{Computer Vision with OpenCV}
+\dfn{OpenCV}{
+Open-source CV library for image I/O, transformations, and basic vision ops.
+}
+
+\subsection*{Quick Notes from Class Demos}
+\begin{itemize}
+    \item Images are NumPy arrays in BGR order; \texttt{img.shape} gives (rows, cols, channels).
+    \item Display with \texttt{cv2.imshow} + \texttt{waitKey} + \texttt{destroyAllWindows}; Matplotlib expects RGB.
+    \item Channels: \texttt{b,g,r = cv2.split(img)} then \texttt{cv2.merge([...])}.
+    \item Resize: \texttt{cv2.resize(img,(w,h))} or scale factors \texttt{fx, fy}; \texttt{INTER\_CUBIC} for up, \texttt{INTER\_AREA} for down.
+    \item Colorspace: \texttt{cv2.cvtColor(img, cv2.COLOR\_BGR2GRAY/RGB)}.
+    \item Arithmetic: \texttt{cv2.add} or \texttt{cv2.addWeighted(img1,a,img2,b,gamma)}.
+    \item Filters: \texttt{cv2.blur}, \texttt{cv2.GaussianBlur}, \texttt{cv2.medianBlur}.
+    \item Rotation: \texttt{M=cv2.getRotationMatrix2D(center, angle, scale)} then \texttt{cv2.warpAffine}.
+    \item ROI crop: slice \texttt{img[y1:y2, x1:x2]}.
+    \item Load from URL: read bytes, \texttt{np.asarray}, then \texttt{cv2.imdecode}.
+\end{itemize}
+
+\subsection*{Read, Show, Save}
+\begin{lstlisting}
+import cv2
+img = cv2.imread("input.jpg")              # BGR
+cv2.imshow("img", img); cv2.waitKey(0)
+cv2.imwrite("out.png", img)
+\end{lstlisting}
+
+\subsection*{Resize}
+\begin{lstlisting}
+resized = cv2.resize(img, (256, 256), interpolation=cv2.INTER_AREA)
+\end{lstlisting}
+
+\subsection*{Scale Up / Down}
+\begin{lstlisting}
+# upsample 2x
+up = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+# downsample 0.5x
+down = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+\end{lstlisting}
+
+\subsection*{Split / Merge Channels}
+\begin{lstlisting}
+b, g, r = cv2.split(img)
+merged = cv2.merge([b, g, r])
+\end{lstlisting}
+
+\subsection*{Display Each Channel}
+\begin{lstlisting}
+cv2.imshow("b", b); cv2.waitKey(0)
+cv2.imshow("g", g); cv2.waitKey(0)
+cv2.imshow("r", r); cv2.waitKey(0); cv2.destroyAllWindows()
+\end{lstlisting}
+
+\subsection*{Blend / Add Images}
+\begin{lstlisting}
+img2 = cv2.imread("overlay.png")
+blend = cv2.addWeighted(img, 0.7, img2, 0.3, 0)
+\end{lstlisting}
+
+\subsection*{Rotate}
+\begin{lstlisting}
+h, w = img.shape[:2]
+M = cv2.getRotationMatrix2D((w/2, h/2), 45, 1.0)
+rotated = cv2.warpAffine(img, M, (w, h))
+\end{lstlisting}
+
+\subsection*{ROI (Crop)}
+\begin{lstlisting}
+roi = img[100:200, 150:300]  # y1:y2, x1:x2
+\end{lstlisting}
+
+\subsection*{Color Space Conversion}
+\begin{lstlisting}
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+\end{lstlisting}
+
+\subsection*{Filtering}
+\begin{lstlisting}
+avg    = cv2.blur(img, (3,3))
+gauss  = cv2.GaussianBlur(img, (3,3), 0)
+median = cv2.medianBlur(img, 3)
+\end{lstlisting}
+
+\subsection*{Load from URL and Crop ROI}
+\begin{lstlisting}
+import urllib.request as req, numpy as np
+data = req.urlopen("https://upload.wikimedia.org/wikipedia/commons/7/78/Pisa_-_veduta_aerea_2.JPG").read()
+arr = np.asarray(bytearray(data), dtype=np.uint8)
+remote = cv2.imdecode(arr, -1)
+roi = remote[100:350, 1200:1800]
+\end{lstlisting}
+
+\section{Practice / Exam Prompts}
+\pr{When to stem vs lemmatize}{
+Stemming is faster/rougher (search recall). Lemmatization is slower but produces valid lemmas (better precision/NLU).
+}
+\pr{Regex task}{
+Write a pattern to extract dates like 2025-04-11 or 11/04/2025: e.g., `(\\d{4}-\\d{2}-\\d{2})|(\\d{2}/\\d{2}/\\d{4})`.
+}
+\pr{Design a sentiment pipeline}{
+Steps: tokenize $\rightarrow$ lowercase/clean $\rightarrow$ vectorize (TF-IDF) $\rightarrow$ train logistic regression; evaluate with held-out set.
+}
+\pr{Image resize + rotate}{
+Given a large photo, resize to 512x512, then rotate 30° about center using OpenCV (`cv2.resize`, `getRotationMatrix2D`, `warpAffine`).
+}
+\pr{ROI use case}{
+Crop a face region for downstream model: use slicing or `cv2.selectROI` to extract and save the patch.
+}

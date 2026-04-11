@@ -1,0 +1,176 @@
+\chapter{Networks}
+
+\section{Overview}
+Network science studies how nodes and edges connect in complex systems (social, biological, technological, semantic). We care about structure (who connects to whom), dynamics (how things flow), and function (what the network enables).
+
+\section{Definitions (boxes)}
+\dfn{Graph}{
+    A network $G=(V,E)$ with node set $V$ and edge set $E$.
+}
+\dfn{Simple / Directed / Weighted}{
+    Simple: no self-loops or multi-edges. Directed: edges have orientation $(u,v)$. Weighted: edges carry weight $w_{uv}$ (cost, capacity, similarity).
+}
+\dfn{Path, Cycle, Distance}{
+    A path is a node sequence with distinct consecutive edges; shortest path minimizes hops/weight. A cycle is a closed path ($\ge3$). Distance $d(u,v)$ is shortest-path length (infinite if disconnected).
+}
+\dfn{Degree and Density}{
+    Undirected degree $k_i$ counts incident edges; directed has $k_i^{in}$ and $k_i^{out}$. Graph density (undirected) $= \dfrac{2E}{N(N-1)}$.
+}
+\dfn{Tree / Spanning Tree}{
+    A connected acyclic graph. A spanning tree touches all nodes of $G$.
+}
+\dfn{Bipartite / Clique}{
+    Bipartite: node set split into two parts, edges only across. Clique: fully connected subset of nodes.
+}
+
+\section{Core Elements}
+\begin{itemize}
+    \item Nodes/vertices/actors; edges/links/ties (can be directed or undirected; weighted or unweighted).
+    \item Node degree $k_i$: number of incident edges. Degree distribution $P(k)$: probability a random node has degree $k$.
+\end{itemize}
+
+\section{Degree Basics}
+For an undirected graph with $N$ nodes and $E$ edges:
+\[
+\langle k \rangle = \frac{2E}{N}.
+\]
+For directed graphs: $\langle k_{in} \rangle = \langle k_{out} \rangle = E/N$.
+
+\section{Network-Level Metrics}
+\begin{itemize}
+    \item \textbf{Connected components}: maximal node sets with paths between any pair (size of the giant component shows connectivity).
+    \item \textbf{Modularity $Q$}: strength of community structure; high $Q$ means dense intra-community, sparse inter-community links.
+    \item \textbf{Assortativity}: correlation of degrees at both ends of edges (social graphs often assortative; technological often disassortative).
+\end{itemize}
+
+\section{Node-Level Metrics}
+\begin{itemize}
+    \item \textbf{Clustering coefficient} of node $i$: $C_i = \dfrac{2 t_i}{k_i(k_i-1)}$ where $t_i$ is triangles through $i$.
+    \item \textbf{Degree centrality}: $k_i$.
+    \item \textbf{Closeness}: $(N-1)/\sum_j d(i,j)$.
+    \item \textbf{Betweenness}: $\sum_{s\neq i\neq t} \sigma_{st}(i)/\sigma_{st}$ (fraction of shortest paths using $i$).
+    \item \textbf{Eigenvector/PageRank}: importance grows with important neighbors; solve $Ax=\lambda x$ or run PageRank.
+\end{itemize}
+
+\section{Python Quick Recipes (NetworkX)}
+\subsection*{Setup}
+\begin{lstlisting}
+pip install networkx
+\end{lstlisting}
+
+\subsection*{Build and Inspect}
+\begin{lstlisting}
+import networkx as nx
+G = nx.Graph()
+G.add_edges_from([(1,2),(2,3),(3,4),(4,1),(2,4),(4,5)])
+print("N,E:", G.number_of_nodes(), G.number_of_edges())
+print("avg degree:", sum(dict(G.degree()).values())/G.number_of_nodes())
+\end{lstlisting}
+
+\subsection*{Components and Communities}
+\begin{lstlisting}
+components = list(nx.connected_components(G))
+print("components:", len(components))
+print("giant size:", len(max(components, key=len)))
+
+import networkx.algorithms.community as comm
+parts = comm.greedy_modularity_communities(G)
+Q = comm.modularity(G, parts)
+print("communities:", [sorted(c) for c in parts])
+print("modularity Q:", Q)
+\end{lstlisting}
+
+\subsection*{Node Metrics}
+\begin{lstlisting}
+deg = dict(G.degree())
+clust = nx.clustering(G)
+close = nx.closeness_centrality(G)
+bet = nx.betweenness_centrality(G, normalized=True)
+eig = nx.eigenvector_centrality(G)
+print("degree:", deg)
+print("clustering:", clust)
+print("closeness:", close)
+print("betweenness:", bet)
+print("eigenvector:", eig)
+\end{lstlisting}
+
+\subsection*{Assortativity}
+\begin{lstlisting}
+r = nx.degree_pearson_correlation_coefficient(G)
+print("degree assortativity:", r)
+\end{lstlisting}
+
+\subsection*{Directed / Weighted Example}
+\begin{lstlisting}
+DG = nx.DiGraph()
+DG.add_weighted_edges_from([("A","B",3), ("B","C",1),
+                            ("C","A",2), ("C","D",4)])
+print("in-degree:", dict(DG.in_degree()))
+print("out-degree:", dict(DG.out_degree()))
+print("pagerank:", nx.pagerank(DG, alpha=0.85))
+\end{lstlisting}
+
+\section{Canonical Problems to Know}
+\pr{Shortest paths}{
+    Unweighted $\rightarrow$ BFS. Non-negative weights $\rightarrow$ Dijkstra. Output distances and predecessor tree for routing.
+}
+\pr{Minimum spanning tree}{
+    Kruskal (sort edges; union--find) or Prim (grow frontier) on connected, weighted, undirected graphs. Minimizes total edge cost while keeping connectivity.
+}
+\pr{Community detection}{
+    Aim for high modularity $Q$. Greedy or Louvain are common heuristics; Girvan--Newman removes edges with highest betweenness.
+}
+\pr{Link prediction}{
+    Simple scores: common neighbors, Jaccard, Adamic--Adar, preferential attachment ($k_u k_v$). Evaluate on held-out edges.
+}
+\pr{Influence / seeding}{
+    Choose seeds by degree, betweenness, or PageRank to maximize diffusion (heuristics for information/virus spread).
+}
+\pr{Bipartite projection}{
+    From 2-mode (author--paper) graph to 1-mode (author--author) with weights = co-occurrences; optionally normalize (Jaccard/Salton).
+}
+
+\section{Theory Snippets (qualitative)}
+\begin{itemize}
+    \item \textbf{Small-world}: high clustering + short average path length (Watts--Strogatz); enables fast diffusion.
+    \item \textbf{Scale-free}: heavy-tailed degree distribution $P(k)\sim k^{-\gamma}$ (Barabási--Albert); hubs dominate robustness/fragility trade-offs.
+    \item \textbf{Assortativity}: positive in social graphs (homophily), negative in technological graphs (hub-and-spoke resilience).
+    \item \textbf{Clustering vs transitivity}: local triangle density vs global ratio of closed triples to all triples.
+    \item \textbf{Bridges/articulation points}: removing them disconnects components; often high betweenness.
+\end{itemize}
+
+\section{Worked Hand Example (tiny graph)}
+Graph: edges $\{(1,2),(2,3),(3,4),(4,1),(2,4),(4,5)\}$.
+\begin{itemize}
+    \item Degrees: $k_1=2, k_2=3, k_3=2, k_4=4, k_5=1$; $\langle k\rangle=12/5=2.4$.
+    \item Triangles: $(1,2,4)$ and $(2,3,4)$ so $t_1=1, t_2=2, t_3=1, t_4=2, t_5=0$.
+    \item Clustering: $C_1=2*1/(2*1)=1.0$; $C_2=2*2/(3*2)=0.67$; $C_3=1.0$; $C_4=2*2/(4*3)=0.33$; $C_5=0$.
+    \item Components: one component of size 5 (connected).
+    \item Betweenness (qualitative): node 4 lies on many shortest paths involving node 5 $\Rightarrow$ highest betweenness.
+\end{itemize}
+
+\section{Practice / Exam Prompts}
+\pr{Compute local metrics}{
+    Given a 5-node graph, hand-compute $C_i$, closeness, and betweenness. (Triangles for $C_i$; BFS trees for distances; count shortest paths for betweenness.)
+}
+\pr{Interpreting modularity}{
+    What does high $Q$ imply? Dense within, sparse between modules. Risk: resolution limit (may prefer or miss small communities).
+}
+\pr{Assortativity contrast}{
+    Provide one assortative example (social/homophily) and one disassortative (Internet/hub--spoke). Explain robustness implications.
+}
+\pr{Bipartite projection task}{
+    From author--paper bipartite, create coauthor weights (shared papers). Discuss normalization choices.
+}
+\pr{Choosing the right tool}{
+    When to use MST (min-cost backbone), shortest paths (routing/latency), or community detection (cohesive groups).
+}
+
+\section{Exam Reminders}
+\begin{itemize}
+    \item Know definitions (node/edge types, degree, clustering, centralities).
+    \item Interpret metrics: high $Q$ means strong communities; assortative vs disassortative mixing.
+    \item Be able to hand-compute small examples (triangles for $C_i$, shortest paths for betweenness).
+    \item Average degree formulas above; for undirected graphs it is always $2E/N$.
+    \item Use the code snippets as templates to verify answers quickly.
+\end{itemize}

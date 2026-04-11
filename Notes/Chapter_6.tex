@@ -1,0 +1,271 @@
+\chapter{Machine Learning}
+
+\section{Supervised Learning}
+\dfn{Supervised Learning}{
+Learn a mapping $x \rightarrow y$ from labeled data.
+}
+\dfn{Classification}{
+Predict discrete labels (e.g., spam/ham). Metrics: accuracy, precision/recall/F1, ROC-AUC.
+}
+\dfn{Regression}{
+Predict continuous targets. Metrics: MAE, MSE/RMSE, $R^2$.
+}
+\dfn{Bias--Variance}{
+High bias underfits; high variance overfits. Use regularization, more data, or simpler/ensemble models.
+}
+\subsection*{Common Models}
+\begin{itemize}
+    \item Logistic regression (classification), linear regression (OLS/Ridge/Lasso).
+    \item $k$-NN, Naive Bayes, Decision Trees, Random Forests, Gradient Boosting (XGBoost/GBM).
+    \item SVM (linear/RBF kernels).
+\end{itemize}
+
+\subsection*{Sklearn Pipeline (train/test split)}
+\begin{lstlisting}
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+clf = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+clf.fit(X_train, y_train)
+pred = clf.predict(X_test)
+print("acc", accuracy_score(y_test, pred))
+print(classification_report(y_test, pred))
+\end{lstlisting}
+
+\subsection*{Cross-Validation \& Grid Search}
+\begin{lstlisting}
+from sklearn.model_selection import GridSearchCV
+params = {"logisticregression__C":[0.1,1,10]}
+grid = GridSearchCV(clf, params, cv=5, scoring="f1")
+grid.fit(X, y)
+print(grid.best_params_, grid.best_score_)
+\end{lstlisting}
+
+\section{Unsupervised Learning}
+\dfn{Unsupervised Learning}{
+Discover structure in unlabeled data.
+}
+\dfn{Clustering}{
+Group similar instances (e.g., K-Means, Hierarchical, DBSCAN).
+}
+\dfn{Dimensionality Reduction}{
+Project data to lower dimensions while preserving variance/structure (PCA, t-SNE/UMAP for viz).
+}
+\dfn{Silhouette Score}{
+Internal cluster quality: cohesion vs separation; range $[-1,1]$.
+}
+
+\subsection*{K-Means Example}
+\begin{lstlisting}
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+kmeans = KMeans(n_clusters=3, random_state=0, n_init="auto")
+labels = kmeans.fit_predict(X)
+print("silhouette", silhouette_score(X, labels))
+\end{lstlisting}
+
+\subsection*{PCA Example}
+\begin{lstlisting}
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2, whiten=True, random_state=0)
+X_2d = pca.fit_transform(X)
+print("explained var", pca.explained_variance_ratio_)
+\end{lstlisting}
+
+\section{Other ML Libraries}
+\dfn{scikit-learn}{
+General-purpose Python ML: preprocessing, model selection, classic algorithms.
+}
+\dfn{TensorFlow / Keras}{
+Deep learning framework + high-level API for building neural nets.
+}
+\dfn{PyTorch}{
+Dynamic graph deep learning library, strong research adoption.
+}
+\dfn{XGBoost / LightGBM}{
+Optimized gradient boosting for tabular data.
+}
+
+\subsection*{Train a Simple MLP (Keras)}
+\begin{lstlisting}
+from tensorflow import keras
+model = keras.Sequential([
+    keras.layers.Input(shape=(X_train.shape[1],)),
+    keras.layers.Dense(64, activation="relu"),
+    keras.layers.Dense(1, activation="sigmoid")
+])
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
+\end{lstlisting}
+
+\section{Neural Networks (Detailed)}
+\dfn{Perceptron / Neuron}{
+Linear transform plus nonlinearity: $h = \sigma(Wx + b)$; nonlinearity enables universal approximation.
+}
+\dfn{Activation Functions}{
+ReLU ($\max(0,x)$), Leaky ReLU, GELU, Sigmoid (bounded, can saturate), Tanh (zero-centered).
+}
+\dfn{Loss Functions}{
+Classification: cross-entropy; regression: MSE/MAE. Optimization minimizes empirical risk.
+}
+\dfn{Backpropagation}{
+Chain rule to compute gradients of loss w.r.t. parameters layer by layer.
+}
+\dfn{Gradient-Based Optimizers}{
+SGD (with/without momentum), RMSProp, Adam (adaptive moments).
+}
+\dfn{Regularization}{
+Weight decay ($L_2$), dropout, early stopping, data augmentation, batch/ layer normalization.
+}
+\dfn{Initialization}{
+Xavier/Glorot for tanh; He for ReLU family to keep variance stable across layers.
+}
+\dfn{Batching}{
+Mini-batch training stabilizes gradients; batch size trades compute vs noise.
+}
+\dfn{Vanishing / Exploding Gradients}{
+Deep nets can suffer when derivatives shrink or blow up; mitigations: better inits, ReLU-like activations, normalization, residual connections.
+}
+
+\subsection*{Feedforward MLP (PyTorch)}
+\begin{lstlisting}
+import torch
+from torch import nn
+
+class MLP(nn.Module):
+    def __init__(self, d_in, d_hidden=128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(d_in, d_hidden),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(d_hidden, 1),
+            nn.Sigmoid()
+        )
+    def forward(self, x):
+        return self.net(x)
+
+model = MLP(d_in=X_train.shape[1])
+loss_fn = nn.BCELoss()
+opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+for epoch in range(10):
+    model.train()
+    xb = torch.tensor(X_train, dtype=torch.float32)
+    yb = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
+    pred = model(xb)
+    loss = loss_fn(pred, yb)
+    opt.zero_grad()
+    loss.backward()
+    opt.step()
+    print(epoch, float(loss))
+\end{lstlisting}
+
+\subsection*{Feedforward MLP (Keras)}
+\begin{lstlisting}
+from tensorflow import keras
+model = keras.Sequential([
+    keras.layers.Input(shape=(X_train.shape[1],)),
+    keras.layers.Dense(256, activation="relu", kernel_initializer="he_normal"),
+    keras.layers.Dropout(0.2),
+    keras.layers.Dense(128, activation="relu"),
+    keras.layers.Dense(1, activation="sigmoid")
+])
+model.compile(optimizer=keras.optimizers.Adam(1e-3),
+              loss="binary_crossentropy",
+              metrics=["accuracy"])
+model.fit(X_train, y_train, epochs=15, batch_size=32,
+          validation_split=0.2, callbacks=[
+              keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True)
+          ])
+\end{lstlisting}
+
+\subsection*{Convolutional Neural Networks (CNN) Essentials}
+\dfn{Convolution}{
+Local receptive field with shared weights; parameters: kernel size, stride, padding, channels.
+}
+\dfn{Pooling}{
+Downsample (max/avg) to reduce spatial dims and add invariance.
+}
+\dfn{Padding / Stride}{
+Padding preserves spatial size; stride controls step size (stride>1 downsamples).
+}
+
+\subsection*{Simple CNN (Keras)}
+\begin{lstlisting}
+model = keras.Sequential([
+    keras.layers.Input(shape=(64,64,3)),
+    keras.layers.Conv2D(32, 3, padding="same", activation="relu"),
+    keras.layers.MaxPool2D(),
+    keras.layers.Conv2D(64, 3, padding="same", activation="relu"),
+    keras.layers.MaxPool2D(),
+    keras.layers.Flatten(),
+    keras.layers.Dense(128, activation="relu"),
+    keras.layers.Dense(10, activation="softmax")
+])
+model.compile(optimizer="adam",
+              loss="sparse_categorical_crossentropy",
+              metrics=["accuracy"])
+\end{lstlisting}
+
+\subsection*{Recurrent / Sequence Models}
+\dfn{RNN / LSTM / GRU}{
+Handle sequences by maintaining hidden state; LSTM/GRU mitigate vanishing gradients with gates.
+}
+
+\begin{lstlisting}
+model = keras.Sequential([
+    keras.layers.Input(shape=(None, d_embed)),
+    keras.layers.GRU(128, return_sequences=False),
+    keras.layers.Dense(1, activation="sigmoid")
+])
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+\end{lstlisting}
+
+\subsection*{Transformers (concept)}
+\dfn{Self-Attention}{
+Computes token-to-token weights to mix information without recurrence or convolution.
+}
+\dfn{Positional Encoding}{
+Adds order information for sequences in transformer models.
+}
+
+\section{Practice / Exam Prompts (NN-Focused)}
+\pr{Init + activation pairing}{
+Why pair He init with ReLU? To preserve variance through layers and reduce vanishing gradients.
+}
+\pr{Regularization plan}{
+Given overfitting CNN: add dropout, data augmentation, weight decay, and early stopping; maybe reduce depth.
+}
+\pr{Optimizer choice}{
+When would you prefer SGD with momentum over Adam? For better generalization on vision tasks; Adam for faster early convergence or sparse grads.
+}
+\pr{Batch norm effect}{
+Explain how batch norm stabilizes training (normalizes intermediate activations, allows higher learning rates).
+}
+\pr{Sequence model pick}{
+Short text classification with little data: use GRU; long contexts or parallel compute: prefer transformer encoder.
+}
+
+\section{Practice / Exam Prompts}
+\pr{Model selection}{
+Given a tabular binary classification task, outline: split data, scale features, baseline logistic regression, try tree/ensemble, compare ROC-AUC, tune with CV.
+}
+\pr{Overfitting diagnosis}{
+Train/val gap high $\rightarrow$ high variance. Mitigate with regularization, fewer parameters, more data, early stopping, dropout (DL).
+}
+\pr{Clustering choice}{
+When clusters are spherical and k is known, use K-Means; if density-based and arbitrary shapes, use DBSCAN; evaluate with silhouette.
+}
+\pr{PCA intuition}{
+PCA finds orthogonal directions of max variance; good for noise reduction and visualization; watch scaling before PCA.
+}
+\pr{Boosting vs bagging}{
+Bagging (RF) reduces variance via parallel trees; boosting (GBM/XGB) reduces bias via sequential trees; boosting can overfit noise if too deep/too many rounds.
+}

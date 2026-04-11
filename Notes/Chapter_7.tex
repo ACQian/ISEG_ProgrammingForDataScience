@@ -1,0 +1,196 @@
+\chapter{Deployment and Web}
+
+\section{Key Internet / Web Concepts}
+\dfn{Protocols}{
+HTTP (hypertext), TCP (reliable transport), IP (addressing/routing), Ethernet (link).
+}
+\dfn{DHCP}{
+Dynamic Host Configuration Protocol; assigns IPs automatically.
+}
+\dfn{IP Addressing}{
+Private vs public IP; servers reachable via public IP or domain.
+}
+\dfn{DNS}{
+Resolves domain names to IP addresses.
+}
+\dfn{HTTP Request--Response}{
+Client sends request, server executes logic/DB access, returns response (HTML/CSS/JS/media), browser renders.
+}
+\dfn{Browser}{
+Issues HTTP, interprets HTML/CSS/JS, renders DOM; offers dev tools.
+}
+\dfn{Stacks}{
+XAMPP (Apache, MariaDB/MySQL, PHP/Perl); MEAN (Mongo, Express, Angular, Node); .NET; Java EE; growing use of Python frameworks.
+}
+
+\section{Web Client Fundamentals}
+\dfn{HTML}{
+Markup language composed of tags and text; DOCTYPE + head + body.
+}
+\dfn{CSS}{
+Styles via rules (selector \{ attr: value; \}); inline, head, or external stylesheet.
+}
+\dfn{JavaScript}{
+Lightweight, interpreted, prototype-based language for client-side interactivity (also Node.js server-side).
+}
+
+\subsection*{HTML Skeleton}
+\begin{lstlisting}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1>Hello Web</h1>
+  </body>
+</html>
+\end{lstlisting}
+
+\subsection*{Form Example}
+\begin{lstlisting}
+<form method="post" action="/submit">
+  <input type="text" name="city" value="Lisbon" size="15" maxlength="15">
+  <input type="submit" value="Send">
+</form>
+\end{lstlisting}
+
+\subsection*{CSS Examples}
+\begin{lstlisting}
+/* external style.css */
+body { background: yellow; }
+p    { color: blue; }
+\end{lstlisting}
+
+\subsection*{JS Example}
+\begin{lstlisting}
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    function teste(){ alert("olá"); }
+  </script>
+</head>
+<body>
+  <input type="button" value="Olá" onclick="teste();">
+</body>
+</html>
+\end{lstlisting}
+
+\section{Python Web with Flask}
+\dfn{Flask}{
+Lightweight WSGI microframework using Werkzeug (WSGI toolkit) and Jinja2 (templating).
+}
+\dfn{Routing}{
+Bind URL paths to view functions with \texttt{@app.route}.
+}
+\dfn{Static Files}{
+Served from \texttt{/static}; reference via \texttt{url\_for('static', filename='style.css')}.
+}
+
+\dfn{Templates}{
+Jinja2 templates rendered with \texttt{render\_template}.
+}
+
+\subsection*{Minimal App}
+\begin{lstlisting}
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Hello, World!"
+
+if __name__ == "__main__":
+    app.run()
+\end{lstlisting}
+
+\subsection*{Routing Example}
+\begin{lstlisting}
+@app.route("/")
+def index():
+    return "Index Page"
+
+@app.route("/hello")
+def hello():
+    return "Hello, World"
+\end{lstlisting}
+
+\subsection*{Template Rendering}
+\begin{lstlisting}
+from flask import Flask, render_template
+app = Flask(__name__)
+
+@app.route("/hello/")
+@app.route("/hello/<name>")
+def hello(name=None):
+    return render_template("hello.html", name=name)
+\end{lstlisting}
+
+Template \texttt{templates/hello.html}:
+\begin{lstlisting}
+<!doctype html>
+<title>Hello from Flask</title>
+{% if name %}
+  <h1>Hello {{ name }}!</h1>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}
+\end{lstlisting}
+
+\subsection*{Simple Form Handling}
+\begin{lstlisting}
+from flask import Flask, request, render_template
+app = Flask(__name__)
+
+@app.route("/", methods=["GET", "POST"])
+def form():
+    if request.method == "POST":
+        author = request.form.get("Author")
+        phrase = request.form.get("phrase")
+        # save/process...
+        return f"Saved: {author} - {phrase}"
+    return render_template("form.html")
+\end{lstlisting}
+
+Form template \texttt{templates/form.html}:
+\begin{lstlisting}
+<form action="/" method="POST">
+  <p>author <input type="text" name="Author"></p>
+  <p>phrase <input type="text" name="phrase"></p>
+  <p><input type="submit" value="Save"></p>
+</form>
+\end{lstlisting}
+
+\subsection*{Serving Static Assets}
+\begin{lstlisting}
+<!-- in template -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+\end{lstlisting}
+
+\section{Deployment Notes}
+\begin{itemize}
+    \item Run locally: \texttt{python app.py} then visit \texttt{http://localhost:5000}.
+    \item Production: use WSGI server (gunicorn/uwsgi) + reverse proxy (nginx); set \texttt{FLASK\_ENV=production}.
+    \item Static vs dynamic content: CDN/static folder for assets; keep secrets out of repo; configure environment variables.
+    \item For quick demos: platforms like Render, Railway, or Heroku-like PaaS; ensure requirements.txt and Procfile.
+\end{itemize}
+
+\section{Practice / Exam Prompts}
+\pr{HTTP flow}{
+Describe the path from typing a URL to page render: DNS lookup, TCP three-way handshake, HTTP request, server logic/DB, HTTP response, browser parse/render.
+}
+\pr{Flask routing}{
+Add a new route \texttt{/about} returning HTML; show how to link to it from a template via \texttt{url\_for}.
+}
+\pr{Forms}{
+Explain POST vs GET for forms; how to read \texttt{request.form} and validate input.
+}
+\pr{Static files}{
+Where to place CSS/JS in Flask and how to reference them with \texttt{url\_for}.
+}
+\pr{Deployment checklist}{
+Use gunicorn behind nginx, set \texttt{DEBUG=False}, configure env vars for secrets, enable logging, and serve static via nginx/CDN.
+}
