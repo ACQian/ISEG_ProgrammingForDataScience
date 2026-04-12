@@ -1,0 +1,517 @@
+\documentclass{article}
+
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage[plain]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{automata,positioning}
+
+%
+% Basic Document Settings
+%
+
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\linespread{1.1}
+
+\pagestyle{fancy}
+%\lhead{\hmwkAuthorName}
+%\chead{\hmwkClass\ (\hmwkClassInstructor\ \hmwkClassTime): \hmwkTitle}
+\rhead{\firstxmark}
+\lfoot{\lastxmark}
+\cfoot{\thepage}
+
+\renewcommand\headrulewidth{0.4pt}
+\renewcommand\footrulewidth{0.4pt}
+
+\setlength\parindent{0pt}
+
+%
+% Create Problem Sections
+%
+
+\newcommand{\enterProblemHeader}[1]{
+    \nobreak\extramarks{}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+}
+
+\newcommand{\exitProblemHeader}[1]{
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \stepcounter{#1}
+    \nobreak\extramarks{Problem \arabic{#1}}{}\nobreak{}
+}
+
+\setcounter{secnumdepth}{0}
+\newcounter{partCounter}
+\newcounter{homeworkProblemCounter}
+\setcounter{homeworkProblemCounter}{1}
+\nobreak\extramarks{Problem \arabic{homeworkProblemCounter}}{}\nobreak{}
+
+%
+% Homework Problem Environment
+%
+% This environment takes an optional argument. When given, it will adjust the
+% problem counter. This is useful for when the problems given for your
+% assignment aren't sequential. See the last 3 problems of this template for an
+% example.
+%
+\newenvironment{homeworkProblem}[1][-1]{
+    \ifnum#1>0
+        \setcounter{homeworkProblemCounter}{#1}
+    \fi
+    \section{Problem \arabic{homeworkProblemCounter}}
+    \setcounter{partCounter}{1}
+    \enterProblemHeader{homeworkProblemCounter}
+}{
+    \exitProblemHeader{homeworkProblemCounter}
+}
+
+%
+% Homework Details
+%   - Title
+%   - Due date
+%   - Class
+%   - Section/Time
+%   - Instructor
+%   - Author
+%
+
+\newcommand{\hmwkTitle}{Lab\ \#10}
+\newcommand{\hmwkDueDate}{April 13, 2026}
+\newcommand{\hmwkClass}{Programming for Data Science}
+\newcommand{\hmwkClassTime}{}
+\newcommand{\hmwkClassInstructor}{Professor Carlos J. Costa}
+\newcommand{\hmwkAuthorName}{\textbf{Cheng Amy QIAN}}
+
+%
+% Title Page
+%
+
+\title{
+    \vspace{2in}
+    \textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+    \normalsize\vspace{0.1in}\small{\hmwkDueDate}\\
+    \vspace{0.1in}\large{\textit{\hmwkClassInstructor\ \hmwkClassTime}}
+    \vspace{3in}
+}
+
+\author{\hmwkAuthorName}
+\date{}
+
+\renewcommand{\part}[1]{\textbf{\large Part \Alph{partCounter}}\stepcounter{partCounter}\\}
+
+%
+% Various Helper Commands
+%
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  numbers=left,
+  numberstyle=\tiny,
+  frame=single,
+  breaklines=true,
+  captionpos=b,
+  showstringspaces=false
+}
+
+
+% Useful for algorithms
+\newcommand{\alg}[1]{\textsc{\bfseries \footnotesize #1}}
+
+% For derivatives
+\newcommand{\deriv}[1]{\frac{\mathrm{d}}{\mathrm{d}x} (#1)}
+
+% For partial derivatives
+\newcommand{\pderiv}[2]{\frac{\partial}{\partial #1} (#2)}
+
+% Integral dx
+\newcommand{\dx}{\mathrm{d}x}
+
+% Alias for the Solution section header
+\newcommand{\solution}{\textbf{\large Solution}}
+
+% Probability commands: Expectation, Variance, Covariance, Bias
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Bias}{\mathrm{Bias}}
+
+\begin{document}
+
+\maketitle
+
+\pagebreak
+
+\begin{homeworkProblem}
+    Explain the syntax used in each framework.\\
+
+    \solution
+    
+    \subsubsection*{1. TensorFlow / Keras: Declarative and Highly Abstracted}
+    TensorFlow, utilizing its Keras API, relies on a declarative syntax. The developer specifies \textit{what} the model architecture should be, and the framework automatically handles the underlying computational execution graphs.
+    
+\begin{lstlisting}[language=Python, caption={Keras Sequential example}]
+model_tf = keras.Sequential([
+    layers.Dense(64, activation="relu", input_shape=(input_dim,)),
+    layers.Dense(32, activation="relu"),
+    layers.Dense(1, activation="sigmoid"),
+])
+
+model_tf.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+model_tf.fit(X_train, y_train, epochs=5, batch_size=32)
+\end{lstlisting}
+    
+    \textbf{Key Characteristics:}
+    \begin{itemize}
+        \item \textbf{Model Definition:} The \texttt{Sequential} API allows for highly readable, Lego-like stacking of layers. Activation functions are conveniently passed as string arguments directly within the layer instantiation.
+        \item \textbf{Compilation Phase:} Before training, the \texttt{.compile()} method is required. This abstracts the assignment of the optimizer, the loss function, and the evaluation metrics into a single, clean line.
+        \item \textbf{Abstracted Training Loop:} The \texttt{.fit()} method is a massive abstraction. It automatically handles batching the data, performing forward passes, calculating loss, executing backpropagation, and updating the weights without exposing these mechanics to the user.
+    \end{itemize}
+
+    \subsubsection*{2. PyTorch: Imperative and Object-Oriented}
+    PyTorch employs an imperative, "define-by-run" syntax. It requires a highly explicit, object-oriented approach where the developer dictates exactly \textit{how} the tensors flow through the network mathematically.
+    
+\begin{lstlisting}[language=Python, caption={PyTorch explicit training loop}]
+class MLP(nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+# --- Explicit Training Loop ---
+for epoch in range(epochs):
+    model_torch.train()                  # 1. Set to training mode
+    outputs = model_torch(X_train_t)     # 2. Forward pass
+    loss = criterion(outputs, y_train_t) # 3. Calculate loss
+    optimizer.zero_grad()                # 4. Clear previous gradients
+    loss.backward()                      # 5. Backpropagation
+    optimizer.step()                     # 6. Update weights
+\end{lstlisting}
+    
+    \textbf{Key Characteristics:}
+    \begin{itemize}
+        \item \textbf{Model Definition:} Models are strictly defined as Python classes inheriting from \texttt{nn.Module}. The layers (and their standalone activation functions) are initialized in the \texttt{\_\_init\_\_} constructor. The forward pass—how the inputs traverse the layers—is explicitly coded in the \texttt{forward()} method.
+        \item \textbf{Manual Training Loop:} Unlike Keras, PyTorch requires the user to construct the training loop manually. The developer is responsible for tracking gradients, stepping the optimizer, and toggling the model between \texttt{.train()} and \texttt{.eval()} modes (which changes the behavior of layers like Dropout or BatchNorm). While this requires more boilerplate code, it grants researchers maximum flexibility for custom training dynamics.
+    \end{itemize}
+
+    \textcolor{Bittersweet}{
+        Overall, would opt for \texttt{Keras} when the project is standard and when the speed of deployment is critical.
+        Syntax is easily readable for biginners or cross-functional teams.
+        But would opt for \texttt{PyTorch} when doing research, building custom loss functions, or implementing complex non-sequential architectures.}
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Describe how the model architecture is defined.\\
+
+    \solution\\
+
+    While the syntax differs, both frameworks rely on assembling foundational layers to define the architecture.\\
+    
+    \textbf{TensorFlow / Keras:}
+    The architecture is built by passing a list of layer objects to a \texttt{Sequential} container. 
+    \begin{itemize}
+        \item \textbf{Input Specification:} The first layer strictly requires an \texttt{input\_shape} or \texttt{input\_dim} argument to initialize the weight matrices.
+        \item \textbf{Layer Diversity:} As seen in \texttt{CompareArchitectures.ipynb}, Keras easily swaps architectures. A standard MLP uses \texttt{layers.Dense}, an RNN uses \texttt{layers.Embedding} followed by \texttt{layers.LSTM}, and a CNN uses \texttt{layers.Conv1D} combined with \texttt{layers.GlobalMaxPooling1D}.
+        \item \textbf{Activations:} Activation functions (e.g., \texttt{'relu'}, \texttt{'sigmoid'}) are typically defined as arguments directly inside the layer definition for brevity.
+    \end{itemize}
+
+    \textbf{PyTorch:}
+    The architecture is defined explicitly as a computational graph inside a class.
+    \begin{itemize}
+        \item \textbf{Initialization:} In the \texttt{\_\_init\_\_} method, layers like \texttt{nn.Linear} (equivalent to Keras's \texttt{Dense}) are instantiated. PyTorch requires specifying both the \textit{in\_features} and \textit{out\_features} for each linear layer, forcing the developer to track matrix dimensions manually.
+        \item \textbf{Activations as Layers:} Unlike Keras, activation functions in PyTorch are often instantiated as distinct layers (e.g., \texttt{nn.ReLU()}, \texttt{nn.Sigmoid()}) within the \texttt{nn.Sequential} block or applied functionally during the \texttt{forward} pass.
+    \end{itemize}
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Specify what data preparation steps are required.\\
+
+    \solution\\
+
+    Neural networks cannot process raw text; therefore, rigorous data preparation is required before training.\\
+    
+    \textbf{Universal Steps (Framework Agnostic):}
+    \begin{itemize}
+        \item \textbf{Data Cleaning:} Dropping missing values using Pandas (\texttt{df.dropna()}).
+        \item \textbf{Train/Test Split:} Segregating data into training and testing sets to evaluate generalization (\texttt{train\_test\_split}).
+        \item \textbf{Text Vectorization:} Converting text to numerical formats. The MLP models use TF-IDF (\texttt{TfidfVectorizer}), which calculates word frequency distributions. The LSTM and CNN models use Tokenization (\texttt{Tokenizer}) combined with \texttt{pad\_sequences} to ensure all input sequences have a uniform length (e.g., \texttt{maxlen=100}), preserving the sequential order of words.
+    \end{itemize}
+
+    \textbf{Framework-Specific Preparations:}
+    \begin{itemize}
+        \item \textbf{TensorFlow/Keras:} Keras is highly flexible and natively accepts standard NumPy arrays or padded sequences output directly from the vectorization steps. No further data type casting is strictly required.
+        \item \textbf{PyTorch:} PyTorch is strictly typed and relies on its own Tensor structures. The NumPy arrays must be explicitly converted using \texttt{torch.tensor(..., dtype=torch.float32)}. Furthermore, PyTorch expects the target labels ($y$) to match the output shape of the network perfectly. This requires reshaping the 1D label array into a 2D column vector using \texttt{.view(-1, 1)}.
+    \end{itemize}
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Explain how models are trained.\\
+
+    \solution\\
+
+    The training phase further emphasizes the architectural philosophies of both frameworks.
+    TensorFlow/Keras completely abstracts the training loop, while PyTorch forces the developer to manually orchestrate every step of the backpropagation algorithm.\\
+
+    \textbf{TensorFlow / Keras: Automated Training}\\
+    Keras splits the training process into two distinct, highly abstracted method calls:
+    \begin{itemize}
+        \item \textbf{Compilation (\texttt{.compile()}):} Before training, the model must be compiled. This step attaches the loss function (e.g., \texttt{'binary\_crossentropy'} for binary classification), the optimizer (e.g., \texttt{'adam'}), and the evaluation metrics (e.g., \texttt{['accuracy']}) to the computational graph.
+        \item \textbf{Fitting (\texttt{.fit()}):} The actual training loop is invoked with a single command. By passing $X_{train}$, $y_{train}$, \texttt{epochs=5}, and \texttt{batch\_size=32}, Keras automatically handles the slicing of data into mini-batches, computes the forward pass, calculates the loss, performs backpropagation, and updates the weights for every batch across every epoch.
+    \end{itemize}
+
+    \textbf{PyTorch: Manual Optimization Loop}\\
+    PyTorch requires explicit instantiation of the loss and optimization functions, followed by a manually constructed \texttt{for} loop to iterate over the epochs.
+    \begin{itemize}
+        \item \textbf{Setup:} The loss function is instantiated as an object (\texttt{criterion = nn.BCELoss()}), and the optimizer is linked directly to the model's parameters (\texttt{optimizer = optim.Adam(model\_torch.parameters(), lr=0.001)}).
+        \item \textbf{The Training Loop:} For each epoch, the developer must explicitly define the sequence of operations:
+        \begin{enumerate}
+            \item \texttt{model\_torch.train()}: Sets the model to training mode (enabling behaviors like Dropout).
+            \item \texttt{outputs = model\_torch(X\_train\_t)}: Executes the forward pass to get predictions.
+            \item \texttt{loss = criterion(outputs, y\_train\_t)}: Computes the error between predictions and true labels.
+            \item \texttt{optimizer.zero\_grad()}: Clears the gradients from the previous iteration. This is critical, as PyTorch accumulates gradients by default.
+            \item \texttt{loss.backward()}: Triggers backpropagation, computing the derivative of the loss with respect to every parameter.
+            \item \texttt{optimizer.step()}: Updates the model's weights based on the computed gradients.
+        \end{enumerate}
+    \end{itemize}
+    
+    \textcolor{Bittersweet}{A crucial difference observed in the \texttt{CompareFrameworks.ipynb} notebook is that the Keras model utilizes mini-batch stochastic gradient descent (\texttt{batch\_size=32}), whereas the PyTorch implementation passes the entire dataset tensor at once, effectively performing full-batch gradient descent.}
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Why do results differ when using the same model in different frameworks?\\
+
+    \solution\\
+
+    When executing the theoretically identical Multi-Layer Perceptron (MLP) architecture in both TensorFlow/Keras and PyTorch, the final accuracy and loss metrics diverge.
+    This discrepancy is not due to a flaw in the underlying mathematics of either framework, but rather distinct differences in implementation details, default behaviors, and the specific training strategies coded in the \texttt{CompareFrameworks.ipynb} notebook.
+
+    \subsubsection*{1. Discrepancy in Batching Strategy (The Primary Cause)}
+    The most significant reason for the differing results lies in how the training data is fed into the models within the provided code:
+    \begin{itemize}
+        \item \textbf{Keras (Mini-Batch Gradient Descent):} The Keras implementation explicitly uses \texttt{batch\_size=32} during \texttt{.fit()}. This means the model updates its weights multiple times per epoch (specifically, $N/32$ times, where $N$ is the size of the training set). Mini-batching introduces stochastic noise into the gradient estimation, which often helps the model escape local minima and generalize better.
+        \item \textbf{PyTorch (Full-Batch Gradient Descent):} The PyTorch training loop lacks a \texttt{DataLoader}. Instead, it passes the entire training tensor \texttt{X\_train\_t} through the model simultaneously. Consequently, the optimizer performs only exactly \textit{one} weight update per epoch based on the average gradient of the entire dataset.
+    \end{itemize}
+
+    \subsubsection*{2. Number of Optimization Steps}
+    Because of the batching discrepancy, the total number of weight updates (optimization steps) differs drastically:
+    \begin{itemize}
+        \item The Keras model runs for 5 epochs. If the training set has, for example, 3,200 samples, there are 100 batches per epoch. Over 5 epochs, the model undergoes $100 \times 5 = 500$ weight updates.
+        \item The PyTorch model runs for 20 epochs but updates only once per epoch, resulting in a mere 20 total weight updates. The Keras model reaches a much more refined region of the loss landscape simply because it has taken significantly more steps.
+    \end{itemize}
+
+    \subsubsection*{3. Default Weight Initialization Schemes}
+    Even if the training loops were perfectly identical, initial results would still differ due to how each framework randomly initializes the starting weights of the layers:
+    \begin{itemize}
+        \item \textbf{TensorFlow/Keras} typically defaults to \textit{Glorot Uniform} (also known as Xavier initialization) for Dense layers.
+        \item \textbf{PyTorch} usually defaults to a variation of \textit{Kaiming Uniform} (He initialization), which is scaled by the inverse square root of the layer's input features. 
+        \item Because the starting positions in the loss landscape are different, gradient descent will carve slightly different paths to the final minimum.
+    \end{itemize}
+
+    \subsubsection*{4. Optimizer Epsilon and Hyperparameters}
+    While both models use the Adam optimizer, the default smoothing term ($\epsilon$) designed to prevent division by zero differs slightly between the frameworks (often $1\text{e-}7$ in Keras vs. $1\text{e-}8$ in PyTorch). Over many epochs, these microscopic differences can compound, leading to different final weights.
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Why do results differ when using different architectures with the same framework?\\
+
+    \solution\\
+    
+    In the \texttt{CompareArchitectures.ipynb} notebook, we evaluate three distinct neural network architectures (MLP, LSTM, and CNN) built entirely within TensorFlow/Keras.
+    Because the framework and training loops are identical, the differences in performance stem entirely from how each architecture ingests, represents, and processes textual data.
+
+    \subsubsection*{1. Multi-Layer Perceptron (MLP): The "Bag of Words" Approach}
+    \begin{itemize}
+        \item \textbf{Data Representation:} The MLP uses a \texttt{TfidfVectorizer}. This converts a document into a flat vector of word frequencies (scaled by their inverse document frequency), capped at 5,000 features.
+        \item \textbf{Processing Mechanism:} MLPs treat the input as an unordered "bag of words." The model looks exclusively at which words are present and how often they appear, passing this through dense layers to find non-linear correlations with the labels.
+        \item \textbf{Why Results Differ:} The MLP fundamentally destroys sentence structure. It cannot understand syntax, context, or the sequential relationships between words (e.g., it cannot distinguish between "the news was not fake" and "the fake was not news"). While effective for simple keyword-based classification, it struggles with complex linguistic nuances.
+    \end{itemize}
+
+    \subsubsection*{2. Long Short-Term Memory (LSTM): The Contextual Sequence Approach}
+    \begin{itemize}
+        \item \textbf{Data Representation:} The LSTM uses a \texttt{Tokenizer} and \texttt{pad\_sequences} to convert text into an ordered array of integer tokens, followed by an \texttt{Embedding} layer that maps each word to a dense 64-dimensional semantic vector.
+        \item \textbf{Processing Mechanism:} As a Recurrent Neural Network (RNN), the LSTM processes the sentence sequentially, word by word. It maintains an internal "hidden state" and "cell state" (memory) that updates as it reads the sequence.
+        \item \textbf{Why Results Differ:} LSTMs are explicitly designed to capture long-term dependencies and context in sequential data. They understand the order of words, making them highly effective at capturing the semantic meaning, tone, and logical flow of a sentence—features that are highly indicative of deceptive or "fake" news.
+    \end{itemize}
+
+    \subsubsection*{3. Convolutional Neural Network (CNN): The Local Pattern Approach}
+    \begin{itemize}
+        \item \textbf{Data Representation:} Like the LSTM, the CNN uses tokenized sequences and an \texttt{Embedding} layer to preserve word order and semantic richness.
+        \item \textbf{Processing Mechanism:} Instead of reading sequentially, the CNN uses a 1D Convolutional layer (\texttt{Conv1D}) with a kernel size of 5. This acts as a sliding window that scans across the sentence, looking at 5 words at a time. It is then followed by a \texttt{GlobalMaxPooling1D} layer, which extracts the strongest signals from the entire text.
+        \item \textbf{Why Results Differ:} The CNN acts as an advanced n-gram detector. It is incredibly efficient at identifying specific, localized linguistic patterns or "trigger phrases" (e.g., sensationalist groupings of words like "shocking new discovery") regardless of where they appear in the text.
+    \end{itemize}
+
+    \textcolor{Bittersweet}{
+    Results differ because each architecture optimizes for a different aspect of language.
+    The MLP optimizes for keyword frequency, the LSTM optimizes for sequential context, and the CNN optimizes for local structural patterns.
+    In NLP tasks like fake news detection, sequence-based models (LSTM/CNN) generally outperform flat models (MLP) because word order and context carry the bulk of the semantic meaning.}
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+    Possible improvements: Identify improvements in the code, considering data preprocessing, model design, training strategy, evaluation, and code structure.\\
+
+    \solution\\
+    
+    Implementing the following improvements would enhance model performance, robustness, and interpretability.
+
+    \subsubsection*{1. Data Preprocessing}
+    \begin{itemize}
+        \item \textbf{Text Normalization:} Currently, the text is only filtered for missing values (\texttt{df.dropna()}). The code must be updated to clean the raw text by converting it to lowercase, removing punctuation, stripping URLs/HTML tags, and removing standard English stop words (e.g., "the", "is", "at"). 
+        \item \textbf{Lemmatization/Stemming:} Reducing words to their base roots (e.g., "running" $\rightarrow$ "run") reduces the vocabulary size and helps the models group similar semantic concepts together.
+        \item \textbf{Stratified Splitting:} In \texttt{CompareArchitectures.ipynb}, the \texttt{train\_test\_split} does not use the \texttt{stratify=y} argument. If the fake news dataset is imbalanced, this could result in an uneven distribution of target labels in the test set.
+    \end{itemize}
+
+    \subsubsection*{2. Model Design}
+    \begin{itemize}
+        \item \textbf{Regularization:} None of the architectures employ techniques to prevent overfitting. Adding \texttt{Dropout} layers (e.g., \texttt{layers.Dropout(0.5)}) after the Dense or LSTM layers is crucial to force the network to learn robust features rather than memorizing the training data.
+        \item \textbf{Pre-trained Word Embeddings:} The sequence models use randomly initialized \texttt{Embedding} layers. Leveraging pre-trained embeddings (such as GloVe, Word2Vec, or FastText) would transfer vast amounts of prior linguistic knowledge into the model, significantly boosting the LSTM and CNN performance.
+    \end{itemize}
+
+    \subsubsection*{3. Training Strategy}
+    \begin{itemize}
+        \item \textbf{Validation Set Integration:} The Keras \texttt{.fit()} methods do not include a validation split (e.g., \texttt{validation\_split=0.2}). Without monitoring a validation set during training, it is impossible to know at which epoch the model begins to overfit.
+        \item \textbf{Early Stopping:} The epochs are hardcoded (5 or 20). Implementing an \texttt{EarlyStopping} callback would automatically halt training when the validation loss stops improving, saving computational resources and preventing overtraining.
+        \item \textbf{PyTorch Mini-batching:} As discussed previously, the PyTorch implementation performs full-batch gradient descent. It urgently needs a \texttt{torch.utils.data.DataLoader} to implement mini-batching, which would stabilize the optimization path and align its training dynamics with the Keras models.
+    \end{itemize}
+
+    \subsubsection*{4. Evaluation Metrics}
+    \begin{itemize}
+        \item \textbf{Beyond Accuracy:} The models are evaluated solely using Accuracy. In binary classification (especially fake news detection, where classes might be imbalanced), accuracy is heavily misleading. 
+        \item \textbf{Comprehensive Reporting:} The evaluation code should be expanded to generate a Confusion Matrix and calculate Precision, Recall, and the F1-Score. For instance, in fake news detection, minimizing False Negatives (missing a fake article) or False Positives (flagging real news as fake) often requires optimizing for Recall or Precision over raw Accuracy.
+    \end{itemize}
+
+    \subsubsection*{5. Code Structure}
+    \begin{itemize}
+        \item \textbf{Hyperparameter Centralization:} Magic numbers (like \texttt{max\_features=5000}, \texttt{maxlen=100}, \texttt{batch\_size=32}) are scattered throughout the code. These should be extracted into a centralized configuration dictionary at the top of the notebook for easier experimentation.
+        \item \textbf{Modularization:} The evaluation printing logic is repeated for every model. This violates the DRY (Don't Repeat Yourself) principle and should be encapsulated into a reusable Python function.
+    \end{itemize}
+
+    \subsubsection*{Demonstration of Improvements (Keras LSTM)}
+    Below is a refactored implementation of the LSTM model demonstrating the suggested improvements in code structure, preprocessing, regularization, training strategy, and evaluation metrics:
+
+\begin{lstlisting}[language=Python, caption={Refactored Keras LSTM with cleaning and early stopping}]
+import pandas as pd
+import re
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.callbacks import EarlyStopping
+
+# 1. CODE STRUCTURE: Centralized Hyperparameters
+CONFIG = {
+    "max_features": 5000,
+    "maxlen": 100,
+    "embedding_dim": 64,
+    "batch_size": 32,
+    "epochs": 20,  # Increased, but safely bounded by Early Stopping
+    "test_size": 0.2,
+    "random_state": 42,
+}
+
+# 2. DATA PREPROCESSING: Text Cleaning Function
+def clean_text(text):
+    text = str(text).lower()                # Lowercase
+    text = re.sub(r"<[^>]+>", "", text)     # Remove HTML tags
+    text = re.sub(r"[^\w\s]", "", text)     # Remove punctuation
+    return text
+
+# Load and clean data
+url = "https://github.com/masterfloss/data/raw/refs/heads/main/fake_new.xlsx"
+df = pd.read_excel(url).dropna()
+df["clean_text"] = df["text"].apply(clean_text)
+
+# 3. DATA PREPROCESSING: Stratified Splitting
+X_train_text, X_test_text, y_train, y_test = train_test_split(
+    df["clean_text"],
+    df["label"],
+    test_size=CONFIG["test_size"],
+    random_state=CONFIG["random_state"],
+    stratify=df["label"],                   # Prevents train/test class imbalance
+)
+
+# Tokenization and Padding
+tokenizer = Tokenizer(num_words=CONFIG["max_features"])
+tokenizer.fit_on_texts(X_train_text)
+X_train_pad = pad_sequences(tokenizer.texts_to_sequences(X_train_text),
+                            maxlen=CONFIG["maxlen"])
+X_test_pad = pad_sequences(tokenizer.texts_to_sequences(X_test_text),
+                           maxlen=CONFIG["maxlen"])
+
+# 4. MODEL DESIGN: Regularization via Dropout
+improved_lstm = keras.Sequential([
+    layers.Embedding(CONFIG["max_features"], CONFIG["embedding_dim"],
+                     input_length=CONFIG["maxlen"]),
+    layers.LSTM(64, return_sequences=False),
+    layers.Dropout(0.5),                    # Prevents overfitting
+    layers.Dense(32, activation="relu"),
+    layers.Dropout(0.5),                    # Prevents overfitting
+    layers.Dense(1, activation="sigmoid"),
+])
+
+improved_lstm.compile(optimizer="adam", loss="binary_crossentropy",
+                      metrics=["accuracy"])
+
+# 5. TRAINING STRATEGY: Early Stopping and Validation Split
+early_stopping = EarlyStopping(
+    monitor="val_loss",
+    patience=3,                             # Stops if no improvement after 3 epochs
+    restore_best_weights=True,              # Rolls back to the best model state
+)
+
+history = improved_lstm.fit(
+    X_train_pad, y_train,
+    epochs=CONFIG["epochs"],
+    batch_size=CONFIG["batch_size"],
+    validation_split=0.2,                   # Monitors unseen data during training
+    callbacks=[early_stopping],             # Attaches the early stopping mechanism
+    verbose=1,
+)
+
+# 6. EVALUATION: Modular Function & Comprehensive Metrics
+def evaluate_model(model, X_test, y_test, model_name="Model"):
+    print(f"--- Evaluation: {model_name} ---")
+    y_pred_probs = model.predict(X_test)
+    y_pred = (y_pred_probs > 0.5).astype(int)
+
+    print("\nConfusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+
+    print("\nClassification Report (Precision, Recall, F1-Score):")
+    print(classification_report(y_test, y_pred))
+
+# Execute evaluation
+evaluate_model(improved_lstm, X_test_pad, y_test, "Improved LSTM")
+\end{lstlisting}
+
+    \textcolor{Bittersweet}{Added \texttt{CONFIG} for clean code architecture. Added Regex, \texttt{re}, for text manipulation. Added Scikit\-learn metrics, \texttt{classification\_report}, which automatically calculate the precision, recall, and F1 scores. Added Keras Callbacks, \texttt{EarlyStopping}, to automate model monitoring.}
+
+\end{homeworkProblem}
+
+\end{document}
